@@ -43,11 +43,14 @@ Plugins** if the profile reloads live.
 
 ### A Keyboard Shortcuts settings page
 
-**Settings → Keyboard shortcuts** sits directly after General. It has three
+**Settings → Keyboard shortcuts** sits directly after General. It has four
 sections:
 
 - **Plugin shortcuts** — the commands this plugin owns, each row editable. Click
   a row, press a combination, and it saves. Press Escape to cancel.
+- **Input navigation** — the two page-key shortcuts. These have no command id,
+  so they are listed read-only rather than being rebindable; the reason is under
+  [Known limitations](#known-limitations).
 - **Input optimisation** — the composer key switch described below.
 - **Application shortcuts** — every other registered command, read-only. This is
   the table that makes a binding conflict comprehensible: when a combination is

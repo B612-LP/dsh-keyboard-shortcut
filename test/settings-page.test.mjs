@@ -112,10 +112,15 @@ const FOREIGN_ROW = {
 }
 
 describe('settings page rendering', () => {
-  it('renders the page description and all three sections', () => {
+  it('renders the page description and all four sections', () => {
     const markup = render(serviceFor({ catalog: [OWNED_ROW, FOREIGN_ROW] }))
     assert.match(markup, /t:page\.description/u)
-    for (const key of ['section.plugin.title', 'section.input.title', 'section.core.title']) {
+    for (const key of [
+      'section.plugin.title',
+      'section.fixed.title',
+      'section.input.title',
+      'section.core.title'
+    ]) {
       assert.match(markup, new RegExp(`t:${key.replace('.', '\\.')}`, 'u'), `missing ${key}`)
     }
   })
