@@ -196,6 +196,26 @@ describe('settings page rendering', () => {
     assert.match(markup, /session\.new/u, 'the conflicting command must be named')
   })
 
+  it('never reports a command as conflicting with itself', () => {
+    // `describeBinding` answers for an arbitrary candidate binding, so it lists
+    // the row itself: a binding trivially overlaps its own. The page must drop
+    // its own id, or every row accuses itself — the reported bug.
+    const service = serviceFor({ catalog: [OWNED_ROW] })
+    service.describeBinding = () => ({ keys: [], conflicts: [OWNED_ROW.id] })
+    const markup = render(service)
+    assert.doesNotMatch(markup, /t:row\.conflict/u, 'a row must not conflict with itself')
+    assert.doesNotMatch(markup, /keyboard-shortcut\.effort-up/u, 'the row id must not leak as a conflict')
+  })
+
+  it('drops only its own id and keeps the other conflicting commands', () => {
+    const service = serviceFor({ catalog: [OWNED_ROW] })
+    service.describeBinding = () => ({ keys: [], conflicts: [OWNED_ROW.id, 'session.new'] })
+    const markup = render(service)
+    assert.match(markup, /t:row\.conflict/u, 'a real conflict must still be reported')
+    assert.match(markup, /session\.new/u, 'the other command must be named')
+    assert.doesNotMatch(markup, /keyboard-shortcut\.effort-up/u, 'the row id must be filtered out')
+  })
+
   it('lists the page keys as read-only rows', () => {
     const markup = render(serviceFor({ catalog: [FOREIGN_ROW] }))
     assert.match(markup, /t:section\.fixed\.title/u)

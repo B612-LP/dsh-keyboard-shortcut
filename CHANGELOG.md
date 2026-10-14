@@ -25,6 +25,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   separator while rendering. Keycaps are now drawn verbatim, matching the
   `ShortcutKeys` primitive, so wide combinations keep their single separator
   and chords (`Ctrl+K`, `C`) stay adjacent as the service intends.
+- **Every row on the settings page reported a conflict with itself.** The page
+  asked `describeBinding` about the row's own binding, and that function
+  answers for an arbitrary candidate: it lists every command holding the
+  combination, and a binding trivially overlaps itself. Each row therefore
+  accused itself — `Ctrl+Q` naming `keyboard-shortcut.cycle-permission`,
+  `Ctrl+1` naming `keyboard-shortcut.effort-down`. The row's own id is now
+  filtered out before the hint is rendered, matching the shipped shortcut
+  editor, so only genuine conflicts with other commands are shown.
 
 ## [0.1.0] - 2026-10-14
 

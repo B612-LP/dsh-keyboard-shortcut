@@ -98,6 +98,16 @@ a right-aligned control — and reads every colour from the theme tokens
 `--dsw-alias-bg-module-platform`, `--dsw-alias-interactive-bg-hover`). It
 therefore follows light, dark, and any skin without plugin-specific overrides.
 
+**Conflict hints.** A row that holds a combination another command also holds
+warns about it. The page asks the shortcut service to describe the binding
+rather than reading the row's own `conflicts` field, because that field is
+computed against the *committed* configuration while the hint must also be
+right for a binding the user is about to save. `describeBinding` answers for an
+arbitrary candidate, so it lists every command that holds the combination —
+including the row itself, whose binding trivially overlaps its own. The page
+therefore drops its own id before rendering, exactly as the shipped shortcut
+editor does; without that filter every row accuses itself.
+
 **Absent interface.** `ctx.slots` is injected, so the page cannot be missing
 while the plugin is mounted.
 

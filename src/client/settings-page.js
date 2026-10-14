@@ -258,10 +258,16 @@ function EditableRow(props) {
     }
   }, [active, commit, cancel])
 
+  // `describeBinding` answers for an arbitrary candidate binding, so it lists
+  // every command that holds the combination — including this row, which
+  // trivially overlaps its own binding. The canonical editor drops its own id
+  // before reporting, and so does this page: a command never conflicts with
+  // itself, it merely describes the combination it already holds.
   const conflict = useMemo(() => {
     if (row.binding === null || row.binding === undefined) return undefined
-    return describeBinding?.(row.binding)?.conflicts ?? []
-  }, [row.binding, describeBinding])
+    const conflicts = describeBinding?.(row.binding)?.conflicts ?? []
+    return conflicts.filter((id) => id !== row.id)
+  }, [row.binding, row.id, describeBinding])
 
   const issue = row.issue ?? undefined
   const hint = failure ?? (issue === 'reserved' ? t('row.reserved') : issue === 'unsupported-browser' ? t('row.unsupported') : undefined)
