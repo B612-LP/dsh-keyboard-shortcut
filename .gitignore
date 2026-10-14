@@ -4,6 +4,7 @@
 node_modules/
 .ref/
 .tools/
+.scratch/
 *.log
 *.tgz
 *.tsbuildinfo

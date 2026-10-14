@@ -142,6 +142,40 @@ describe('settings page rendering', () => {
     assert.doesNotMatch(markup, /t:row\.change/u, 'a foreign row must be read-only')
   })
 
+  it('renders the Windows key-label list without doubling its separators', () => {
+    // `presentBinding` already interleaves ASCII plus tokens on Windows
+    // (['Ctrl', '+', 'Q']). The page used to prepend one of its own to every
+    // label after the first, which produced 'Ctrl + + + Q' — the reported bug.
+    const windowsRow = { ...OWNED_ROW, keys: ['Ctrl', '+', 'Q'] }
+    const markup = render(serviceFor({ catalog: [windowsRow] }))
+    assert.equal(count(markup, '+'), 1, 'a Windows binding must show exactly one separator')
+    assert.equal(count(markup, 'dshKbd_separator'), 1, 'the plus must be styled as a separator')
+  })
+
+  it('renders a macOS label list verbatim, with no invented separator', () => {
+    // macOS and Linux deliberately return the bare labels and let the CSS gap
+    // space them; adding a plus here would misstate the binding.
+    const macRow = { ...OWNED_ROW, keys: ['⌃', 'Q'] }
+    const markup = render(serviceFor({ catalog: [macRow] }))
+    assert.equal(count(markup, '+'), 0, 'a macOS binding must not gain a separator')
+    assert.match(markup, /⌃/u)
+  })
+
+  it('keeps a chord adjacent, matching the service presentation', () => {
+    // A two-key chord is one keystroke sequence, not a combination, so the
+    // service leaves its labels adjacent on every platform.
+    const chord = { ...OWNED_ROW, keys: ['Ctrl', 'K', 'C'] }
+    const markup = render(serviceFor({ catalog: [chord] }))
+    assert.equal(count(markup, '+'), 0, 'a chord must not be drawn as a combination')
+  })
+
+  it('shows a single keycap for a bare single-key binding', () => {
+    const bare = { ...OWNED_ROW, keys: ['F5'] }
+    const markup = render(serviceFor({ catalog: [bare] }))
+    assert.equal(count(markup, '+'), 0, 'one key needs no separator')
+    assert.match(markup, /class="dshKbd_key"/u, 'a single key still renders a keycap')
+  })
+
   it('renders an unbound command as the "no shortcut" placeholder', () => {
     const markup = render(
       serviceFor({ catalog: [{ ...OWNED_ROW, binding: null, keys: [] }] })

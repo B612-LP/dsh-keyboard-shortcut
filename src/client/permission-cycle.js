@@ -18,8 +18,8 @@
  *
  * | Fact | Source |
  * |---|---|
- * | Available modes | `ctx.remote.permissionPresets.catalog()` |
- * | Whether that list changed | `ctx.remote.$on('permission-presets/catalog-changed')` |
+ * | Available modes | `ctx.get('remote.permissionPresets').catalog()` |
+ * | Whether that list changed | `ctx.get('remote').$on('permission-presets/catalog-changed')` |
  * | Current mode of one session | the session's `permissions` projection |
  * | Applying a mode | `session.command('/permission <preset>')` |
  *
@@ -30,8 +30,18 @@
 
 /**
  * Remote namespace name, as it appears under `ctx.remote`.
+ *
+ * The full service name is `remote.permissionPresets`: the gateway registers
+ * every Remote namespace as a Cordis service named `remote.<namespace>`, so it
+ * must be resolved with `ctx.get` rather than read off the `remote` service.
+ * Reading it as a property of `remote` is rewritten by Cordis into the service
+ * look-up `remote.permissionPresets`, which fails for a plugin whose `inject`
+ * list does not declare it.
  */
 const PERMISSION_REMOTE = 'permissionPresets'
+
+/** Fully qualified Cordis service name of the permission namespace. */
+const PERMISSION_SERVICE = `remote.${PERMISSION_REMOTE}`
 
 /** Forwarded event that invalidates the catalog. */
 const CATALOG_CHANGED = 'permission-presets/catalog-changed'
@@ -91,10 +101,10 @@ export function createPermissionCatalog(ctx) {
   let epoch = 0
   let disposed = false
 
-  /** Resolve the Remote namespace face, or `undefined`. */
+  /** Resolve the Remote namespace service, or `undefined`. */
   const namespace = () => {
     try {
-      return ctx.get?.('remote')?.[PERMISSION_REMOTE]
+      return ctx.get?.(PERMISSION_SERVICE)
     } catch {
       return undefined
     }

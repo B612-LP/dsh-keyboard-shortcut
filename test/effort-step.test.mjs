@@ -14,6 +14,32 @@ import { describe, it } from 'node:test'
 import { stepEffort } from '../src/client/effort-step.js'
 
 /**
+ * Build a Cordis-shaped client context around the given services.
+ *
+ * Cordis resolves a service through `ctx.get(name)`; reading it as a plain
+ * property of the context throws unless the plugin declared it in `inject`.
+ * This module's `inject` list is deliberately three services wide, so the
+ * effort path must reach `sessions` and `modelDirectories` through `get`. A
+ * bare `ctx.sessions` used to throw exactly here and made every effort
+ * keypress report "this model has no reasoning effort levels"; the proxy below
+ * fails the same way, so that regression cannot come back unnoticed.
+ *
+ * @param services - Services to expose through `get`.
+ * @returns The context.
+ */
+function clientContext(services) {
+  return new Proxy(
+    { get: (name) => services[name] },
+    {
+      get(target, prop) {
+        if (prop in target || typeof prop === 'symbol') return Reflect.get(target, prop)
+        throw new Error(`cannot get property "${String(prop)}" without inject`)
+      }
+    }
+  )
+}
+
+/**
  * Build a client context around one model's reasoning ladder.
  *
  * @param options - Ladder and selection.
@@ -52,13 +78,13 @@ function contextFor(options = {}) {
       return { ok: true, value: undefined }
     }
   }
-  const ctx = {
+  const services = {
     sessions: {
       binding: () => ({ session: { projections: { faceOf: () => ({ getSnapshot: () => ({ next: selection }) }) } } })
     },
     modelDirectories: { directoryFor: () => directory }
   }
-  return { ctx, calls }
+  return { ctx: clientContext(services), calls }
 }
 
 describe('stepEffort', () => {
@@ -124,16 +150,16 @@ describe('stepEffort', () => {
   })
 
   it('refuses a level on a session with no model selection', async () => {
-    const ctx = {
+    const ctx = clientContext({
       sessions: { binding: () => ({ session: { projections: { faceOf: () => ({ getSnapshot: () => undefined }) } } }) },
       modelDirectories: { directoryFor: () => ({}) }
-    }
+    })
     await assert.rejects(() => stepEffort(ctx, 's1', 1), /no model selection/u)
   })
 
   it('surfaces a rejected selection', async () => {
     const { ctx } = contextFor({ reasoningEffort: 'low' })
-    ctx.modelDirectories.directoryFor = () => ({
+    ctx.get('modelDirectories').directoryFor = () => ({
       load: async () => {},
       store: { getSnapshot: () => ({ groups: [{ id: 'p', models: [{ id: 'm', reasoning: { efforts: [{ id: 'low', name: 'L' }, { id: 'high', name: 'H' }] } }] }] }) },
       select: async () => ({ ok: false, error: { code: 'session/model-unavailable', message: 'nope' } })

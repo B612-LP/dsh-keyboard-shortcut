@@ -222,8 +222,8 @@ changes the list.
 
 | Fact | Source |
 |---|---|
-| Available modes | `ctx.remote.permissionPresets.catalog()` |
-| Whether that list changed | `ctx.remote.$on('permission-presets/catalog-changed')` |
+| Available modes | `ctx.get('remote.permissionPresets').catalog()` |
+| Whether that list changed | `ctx.get('remote').$on('permission-presets/catalog-changed')` |
 | Current mode of one session | the session's `permissions` projection |
 | Applying a mode | `session.command('/permission <preset>')` |
 
@@ -260,10 +260,10 @@ notion of a numeric level or a step helper, so the array is the only ordering
 that exists and stepping is this plugin's job.
 
 **Why the shared directory rather than the Remote.** The composer's model seat
-and this plugin both need the same answer, and `ctx.modelDirectories` is the
-per-session object the seat itself renders from. Reading and writing through it
+and this plugin both need the same answer, and `ctx.get('modelDirectories')` is
+the per-session object the seat itself renders from. Reading and writing through it
 means the shortcut and the on-screen picker cannot disagree — a direct
-`ctx.remote.session.selectModel` call would bypass the seat's spinner and its
+`ctx.get('remote.session').selectModel` call would bypass the seat's spinner and its
 optimistic state.
 
 **Clamping, not wrapping.** Steps clamp at both ends. Wrapping would be actively

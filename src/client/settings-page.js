@@ -57,6 +57,7 @@ const CSS = {
   control: 'dshKbd_control',
   keys: 'dshKbd_keys',
   key: 'dshKbd_key',
+  separator: 'dshKbd_separator',
   button: 'dshKbd_button',
   buttonQuiet: 'dshKbd_buttonQuiet',
   recording: 'dshKbd_recording',
@@ -81,6 +82,7 @@ const STYLESHEET = `
 .${CSS.control}{display:flex;align-items:center;gap:8px;flex:none}
 .${CSS.keys}{display:inline-flex;align-items:center;gap:4px;border-radius:var(--dsw-radius-sm);background:var(--dsw-alias-bg-module-platform);color:var(--dsw-alias-label-secondary);padding:3px 8px;font-size:12px;line-height:18px;font-variant-numeric:tabular-nums}
 .${CSS.key}{font-family:inherit}
+.${CSS.separator}{font:inherit;color:var(--dsw-alias-label-tertiary)}
 .${CSS.button}{border-radius:var(--dsw-radius-md);background:var(--dsw-alias-bg-module-platform);color:var(--dsw-alias-label-primary);border:none;cursor:pointer;font:inherit;font-size:13px;line-height:20px;height:30px;padding:0 12px;white-space:nowrap}
 .${CSS.button}:hover{background:var(--dsw-alias-interactive-bg-hover)}
 .${CSS.buttonQuiet}{background:0 0;color:var(--dsw-alias-label-secondary);padding:0 8px}
@@ -125,7 +127,18 @@ const MODIFIER_CODES = new Set([
 /**
  * Render keycap labels for a binding.
  *
- * @param keys - Physical key names from the shortcut service.
+ * The keys are rendered exactly as the shortcut service presents them. That
+ * array is already the finished label list: on Windows `presentBinding`
+ * interleaves literal ASCII plus tokens (`['Ctrl', '+', 'Q']`) because that is
+ * the platform convention, and on macOS and Linux it deliberately omits them,
+ * leaving the CSS gap to space the labels. Prefixing a separator here — as this
+ * page used to — doubled the sign on Windows and produced "Ctrl + + + Q", and
+ * inventing one on macOS would misrepresent a chord as a combination.
+ *
+ * A plus token is styled as a separator rather than a keycap so it keeps the
+ * muted colour of punctuation instead of reading as a key the user must press.
+ *
+ * @param keys - Key labels from the shortcut service.
  * @param t - Locale reader.
  * @returns A row of keycaps, or the "no shortcut" placeholder.
  */
@@ -137,7 +150,7 @@ function keycaps(keys, t) {
     'span',
     { className: CSS.keys },
     keys.map((key, index) =>
-      h('span', { className: CSS.key, key: `${key}:${index}` }, index === 0 ? key : `+ ${key}`)
+      h('span', { className: key === '+' ? CSS.separator : CSS.key, key: `${key}:${index}` }, key)
     )
   )
 }

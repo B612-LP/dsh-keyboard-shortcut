@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **`Ctrl+Q`, `Ctrl+1` and `Ctrl+2` reported their capability as unavailable.**
+  The Remote permission namespace is a Cordis service named
+  `remote.permissionPresets`, not a property of the `remote` service, and the
+  `sessions` and `modelDirectories` services were read as bare context
+  properties. Cordis rejects all three reads for a plugin that does not declare
+  them in `inject`, so every shortcut failed its resolution no matter how the
+  session was configured and the generic "unavailable" notice was shown. They
+  are now resolved with `ctx.get`, the lookup form that works for any provided
+  service. The on-screen pickers were never affected because they belong to
+  plugins that do declare these services.
+- **The settings page rendered three `+` signs per binding.** DSH's
+  `describeBinding` already returns a presentation array carrying its own `+`
+  separators (`['Ctrl', '+', 'Q']` on Windows), and the page added a second
+  separator while rendering. Keycaps are now drawn verbatim, matching the
+  `ShortcutKeys` primitive, so wide combinations keep their single separator
+  and chords (`Ctrl+K`, `C`) stay adjacent as the service intends.
+
 ## [0.1.0] - 2026-10-14
 
 Initial release.

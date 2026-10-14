@@ -40,15 +40,24 @@ function remoteStub({ options = ['read-only', 'workspace-write', 'danger-full-ac
 /**
  * Build a context carrying a Remote namespace.
  *
+ * The namespace is exposed only under its fully qualified Cordis service name,
+ * `remote.permissionPresets`, exactly as the gateway registers it. A context
+ * that instead handed the namespace back as a property of the `remote` object
+ * would be kinder than Cordis: reading `ctx.get('remote').permissionPresets`
+ * throws unless the plugin declared it in `inject`, which is what made the
+ * permission shortcut report "permission modes are unavailable" while the
+ * on-screen picker kept working. This stub preserves the real failure mode.
+ *
  * @param remote - A stub from {@link remoteStub}.
  * @returns The context.
  */
 function ctxWith(remote) {
+  const services = {
+    remote: { $on: remote.on },
+    'remote.permissionPresets': remote.namespace
+  }
   return {
-    get: (name) => {
-      if (name !== 'remote') return undefined
-      return { permissionPresets: remote.namespace, $on: remote.on }
-    }
+    get: (name) => services[name]
   }
 }
 
@@ -161,6 +170,32 @@ describe('cyclePermissionMode', () => {
 })
 
 describe('createPermissionCatalog', () => {
+  it('resolves the namespace as the qualified service, not a Remote property', async () => {
+    // Cordis registers each Remote namespace as the service `remote.<name>`.
+    // Reading it as a property of the `remote` service is rewritten into the
+    // very same look-up, which THROWS for a plugin that did not declare it in
+    // `inject` — and the `try/catch` in this module then swallowed that throw
+    // into `undefined`, so every permission keypress reported "unavailable".
+    // The stub below hands the namespace back only the old, wrong way.
+    const remote = remoteStub()
+    const legacy = {
+      get: (name) =>
+        name === 'remote' ? { permissionPresets: remote.namespace, $on: remote.on } : undefined
+    }
+    const catalog = createPermissionCatalog(legacy)
+    await catalog.load()
+    assert.equal(catalog.get(), undefined, 'a property-style namespace must not satisfy the read')
+    assert.match(String(catalog.failure()), /not available/u)
+  })
+
+  it('reads the catalog through the qualified service name', async () => {
+    const remote = remoteStub()
+    const catalog = createPermissionCatalog(ctxWith(remote))
+    await catalog.load()
+    assert.equal(catalog.get().length, 3, 'the qualified service must yield the advertised modes')
+    assert.equal(catalog.failure(), undefined)
+  })
+
   it('subscribes before the first read, so an early invalidation is not lost', async () => {
     const remote = remoteStub()
     const order = []

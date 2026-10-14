@@ -17,10 +17,11 @@
  *
  * The selected model for a session is the `modelSelection` projection. The
  * richer surface — the catalog joined with the session's current selection —
- * is the shared per-session directory at `ctx.modelDirectories`, which is also
- * the writer that keeps the composer's model seat in sync. Using that shared
- * directory rather than calling the Remote directly means the shortcut and the
- * on-screen picker can never disagree.
+ * is the shared per-session directory reached through
+ * `ctx.get('modelDirectories')`, which is also the writer that keeps the
+ * composer's model seat in sync. Using that shared directory rather than calling
+ * the Remote directly means the shortcut and the on-screen picker can never
+ * disagree.
  *
  * ## Clamping
  *
@@ -44,7 +45,7 @@ const MODEL_SELECTION = 'modelSelection'
  * @returns The selection, or `undefined` when the session has none.
  */
 export function readSelection(ctx, sessionId) {
-  const binding = ctx.sessions.binding(sessionId)
+  const binding = ctx.get('sessions')?.binding?.(sessionId)
   if (binding === undefined) return undefined
   const projection = binding.session.projections.faceOf(MODEL_SELECTION).getSnapshot()
   return projection?.next ?? projection?.lastUsed ?? undefined
@@ -82,7 +83,9 @@ export async function stepEffort(ctx, sessionId, delta) {
   const selection = readSelection(ctx, sessionId)
   if (selection === undefined) throw new Error('this session has no model selection yet')
 
-  const directory = ctx.modelDirectories.directoryFor(sessionId)
+  const directories = ctx.get('modelDirectories')
+  if (directories === undefined) throw new Error('the model directory is not available in this deployment')
+  const directory = directories.directoryFor(sessionId)
   await directory.load()
   const state = directory.store.getSnapshot()
 
