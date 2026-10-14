@@ -33,6 +33,54 @@ const NAMED_CODES = new Set([
 ])
 
 /**
+ * Transcribe the registry's Web allowlist.
+ *
+ * Copied from `isWebBindingAllowed` in `@deepseek-ai/dsh-client-shortcuts`,
+ * including its `primary` expansion and the three combinations admitted on
+ * every platform, so a Web default can be checked here instead of only at
+ * registration time in a live graph.
+ *
+ * @param platform - `windows`, `macos`, or `linux`.
+ * @param binding - A declared binding, as written in the defaults map.
+ * @returns Whether the registry would admit it on Web.
+ */
+function webBindingAllowed(platform, binding) {
+  if (binding.secondCode !== undefined) return false
+  const primary = platform === 'macos' ? 'meta' : 'control'
+  // The registry normalizes both sides before comparing, which is what turns a
+  // declared `primary` into `control` on Windows and `meta` on macOS.
+  const modifiers = binding.modifiers.map((modifier) => (modifier === 'primary' ? primary : modifier))
+  if (platform === 'windows' || platform === 'macos') {
+    if (modifiers.length >= 3) return true
+    if (
+      modifiers.length === 1 &&
+      ((['Comma', 'Backslash'].includes(binding.code) && modifiers[0] === primary) ||
+        (binding.code === 'Backquote' && modifiers[0] === 'control'))
+    ) {
+      return true
+    }
+    if (
+      modifiers.length === 2 &&
+      modifiers.includes(primary) &&
+      (modifiers.includes('alt') || modifiers.includes('shift'))
+    ) {
+      return true
+    }
+  }
+  // Admitted everywhere, listed verbatim from the registry's tail return.
+  const admitted = [
+    { code: 'Slash', modifiers: ['primary'] },
+    { code: 'Comma', modifiers: ['primary', 'shift'] },
+    { code: 'Period', modifiers: ['primary', 'shift'] }
+  ]
+  const key = (code, list) => [code, ...[...list].sort()].join('+')
+  return admitted.some((candidate) => {
+    const resolved = candidate.modifiers.map((modifier) => (modifier === 'primary' ? primary : modifier))
+    return key(candidate.code, resolved) === key(binding.code, modifiers)
+  })
+}
+
+/**
  * Load the built client bundle and materialize its factory.
  *
  * @param require - The factory's `require`.
@@ -211,11 +259,12 @@ describe('client half activation', () => {
     )
   })
 
-  it('declares no Web default for a combination the Web allowlist refuses', () => {
+  it('declares no Web default that the Web allowlist would refuse', () => {
     // `register` throws `Unsupported Web shortcut: <id>` for a Web default the
-    // browser allowlist does not admit, and Alt+A / Ctrl+L are both refused
-    // there. Declaring one would take the whole command down, so the profiles
-    // are pinned here rather than left to the registry to reject at runtime.
+    // browser allowlist does not admit, and one bad profile takes the whole
+    // command down — not just that profile. The allowlist below is transcribed
+    // from the registry, the way `key-codes.test.mjs` transcribes its code
+    // whitelist, so a default added for Web has to survive it here first.
     const provided = { locale: localeService() }
     const { context, commands } = fakeContext(provided)
 
@@ -225,12 +274,20 @@ describe('client half activation', () => {
     })
     exports.apply(context)
 
+    // The transcription has to have teeth, or the loop below proves nothing:
+    // both new combinations are exactly the ones Web refuses, and the shipped
+    // Slash binding is the one it admits.
+    assert.equal(webBindingAllowed('windows', { code: 'KeyA', modifiers: ['alt'] }), false)
+    assert.equal(webBindingAllowed('windows', { code: 'KeyL', modifiers: ['control'] }), false)
+    assert.equal(webBindingAllowed('windows', { code: 'Slash', modifiers: ['primary'] }), true)
+
     for (const command of commands) {
-      for (const profile of Object.keys(command.defaults ?? {})) {
-        assert.doesNotMatch(
-          profile,
-          /^web:/u,
-          `${command.id} must not declare a Web default (${profile})`
+      for (const [profile, binding] of Object.entries(command.defaults ?? {})) {
+        if (!profile.startsWith('web:')) continue
+        assert.equal(
+          webBindingAllowed(profile.slice('web:'.length), binding),
+          true,
+          `${command.id} declares a Web default (${profile}) the registry would reject`
         )
       }
     }
