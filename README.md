@@ -1,14 +1,14 @@
 # dsh-keyboard-shortcut
 
 A Keyboard Shortcuts settings page for DeepSeek Harness (DSH), with permission-mode
-cycling, reasoning-effort stepping, prompt navigation, and an optional composer
-key remap.
+cycling, reasoning-effort stepping, prompt navigation, a status-page shortcut, a
+task-list toggle, and an optional composer key remap.
 
 [中文文档](README.zh-CN.md)
 
 ## Overview
 
-`dsh-keyboard-shortcut` adds one page to DSH's Settings panel and five shortcuts
+`dsh-keyboard-shortcut` adds one page to DSH's Settings panel and seven shortcuts
 to the application. The page lists every binding in the running application,
 lets you change the ones this plugin owns, and carries a switch for remapping the
 composer's Enter keys.
@@ -63,6 +63,8 @@ sections:
 | <kbd>Ctrl</kbd>+<kbd>Q</kbd> | Cycle to the next permission mode | Desktop Windows, macOS |
 | <kbd>Ctrl</kbd>+<kbd>1</kbd> | Lower the reasoning effort one level | Desktop |
 | <kbd>Ctrl</kbd>+<kbd>2</kbd> | Raise the reasoning effort one level | Desktop |
+| <kbd>Alt</kbd>+<kbd>A</kbd> | Open the DeepSeek status page in the sidebar browser | Desktop |
+| <kbd>Ctrl</kbd>+<kbd>L</kbd> | Expand or collapse the task list | Desktop |
 | <kbd>PgUp</kbd> | Go to the previous input | All (fixed) |
 | <kbd>PgDn</kbd> | Go to the next input | All (fixed) |
 | <kbd>Ctrl</kbd>+<kbd>/</kbd> | Open this plugin's settings page | All |
@@ -111,11 +113,24 @@ built-in picker runs. It performs no filesystem access and no network requests.
 
 ## Known limitations
 
-- **Cycle and effort shortcuts are Desktop-only by default.** DSH reserves
-  <kbd>Ctrl</kbd>+<kbd>Q</kbd> outside Desktop Windows and macOS, and browsers
-  claim <kbd>Ctrl</kbd>+<kbd>1</kbd>…<kbd>Ctrl</kbd>+<kbd>8</kbd> for tab
-  switching. Both commands exist on every platform and can be bound by hand; they
-  simply ship unbound where the combination cannot work.
+- **Cycle, effort, status-page and task-list shortcuts are Desktop-only by
+  default.** DSH reserves <kbd>Ctrl</kbd>+<kbd>Q</kbd> outside Desktop Windows
+  and macOS, and browsers claim <kbd>Ctrl</kbd>+<kbd>1</kbd>…<kbd>Ctrl</kbd>+<kbd>8</kbd>
+  for tab switching. <kbd>Alt</kbd>+<kbd>A</kbd> and <kbd>Ctrl</kbd>+<kbd>L</kbd>
+  are not admitted by the browser allowlist at all — a single non-primary
+  modifier is refused, and both keys are spoken for. All four commands exist on
+  every platform and can be bound by hand; they simply ship unbound where the
+  combination cannot work.
+- **The status-page shortcut reuses an open page.** The sidebar browser
+  registers itself as a tab type that may appear more than once, so opening it
+  through the sidebar's own API always mints a new tab. The plugin therefore
+  looks for an existing browser tab first and reveals it, expanding the column
+  if it is collapsed. A tab belonging to another session is ignored, because the
+  sidebar only reveals tabs in the session on screen.
+- **The task-list toggle clicks the panel header.** DSH keeps the collapsed
+  state inside the panel component and exposes no handle, so the shortcut drives
+  the same button a click would. A session with no task list shows nothing to
+  toggle, which the shortcut reports instead of failing.
 - **Prompt navigation drives the turn rail.** DSH publishes no service for
   jumping to a turn, so the shortcut activates the rail's own marks. A turn is
   anchored at its first user message, so "previous input" means "previous turn".

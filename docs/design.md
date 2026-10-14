@@ -74,7 +74,7 @@ half a true no-op.
 
 The cost is explicit: a profile reset that clears site data resets the switches.
 
-## The five integrations
+## The nine integrations
 
 Each integration reads an interface owned by another package. Those interfaces
 are catalogued here with the reason each is used and what happens when it is
@@ -337,9 +337,6 @@ A future DSH that widens the code whitelist should switch to `registerFixed` and
 delete the local table; one that publishes a "go to turn" service should call
 that service and delete the DOM work here.
 
-A future DSH that publishes a "go to turn" service should call that instead and
-the DOM work here should be deleted.
-
 ### 7. The composer remap — a modifier rewrite
 
 **The gap.** The composer owns a Lexical keymap whose Enter command branches on
@@ -390,6 +387,65 @@ a DOM event — to an accelerator registered with the desktop keyboard bridge, s
 option would stop having an effect. The module detects nothing and breaks nothing
 in that case; it simply stops mattering.
 
+### 8. The status page — `sidebarRight` plus its tab inventory
+
+**Interface used.** `ctx.get('sidebarRight')` for `openTab`, `focus`,
+`isExpanded`, `toggleExpanded`, and `openTabs`. The sidebar face is *reflect*
+provided, not injected, so it is read at keypress time; a composition whose
+sidebar was never mounted simply reports that instead of failing to load.
+
+**What exists.** The sidebar browser registers its tab type with
+`multiple: true`, which is what lets a user keep several pages open side by side.
+That flag also decides the tab address: the sidebar builds
+`` `${pageAddress(kind)}/${randomUUID()}` `` for a multiple type and the bare
+`pageAddress(kind)` otherwise, and its store deduplicates only on the bare
+address. Opening through the sidebar's own API therefore always mints a new tab —
+by design, and there is no per-address lookup on the public face.
+
+**What the plugin does.** It reads the tab inventory — the flat list of
+`{sessionId, tabId, kind, contentId}` the sidebar publishes — looks for a browser
+tab belonging to the session on screen, and reveals it. Only when there is none
+does it open a tab at the status URL. Because `focus` is a no-op for a tab the
+user cannot see, a collapsed column is expanded first.
+
+**Why the tab must belong to the on-screen session.** The inventory spans every
+session, and the sidebar's `focus` only reaches tabs in the mounted layout. A tab
+from another session would look like a hit and then do nothing, so it is skipped
+and a tab is opened instead.
+
+**Why not `openResource`.** That path accepts only `dsh-resource://` addresses
+and throws for a page kind. The page-dedup branch of the sidebar's store *would*
+reveal the existing browser page, but it carries no `params`, so it cannot also
+set the URL — the shortcut needs both, which is why the lookup is done here.
+
+**Failure mode, stated plainly.** If a future sidebar stops publishing the tab
+inventory, or renames the browser kind, the lookup finds nothing and every press
+opens a tab. That is the pre-shortcut behaviour of the sidebar itself, so it
+degrades to something usable rather than to nothing.
+
+### 9. The task list — clicking the panel header
+
+**What exists.** DSH renders the checklist above the composer from the `todos`
+session projection, and the collapsed state lives in a `useState` inside the panel
+component. Nothing is published: no store, no handle, no command. The header
+button is the only control that exists, and it carries the `aria-expanded` state
+the panel's own chevron follows.
+
+**What the plugin does.** It finds the panel and presses its header button, which
+is exactly what a click does. The panel is looked up in the composer region when
+that region is marked, so a second conversation surface — a sidebar chat tab —
+cannot be toggled by mistake, with the first panel as a fallback.
+
+**Why a missing panel is not an error.** DSH renders nothing at all for an empty
+projection, so an absent panel is the "this session has no task list" case. The
+shortcut reports that rather than pretending to have toggled something.
+
+**Failure mode, stated plainly.** If a future DSH moves the collapsed state out
+of the component — into a store, or onto the projection — this module would keep
+clicking a header that no longer exists, find nothing, and report an empty list.
+The remedy is the same as for the other DOM-layer integrations: call the service
+that replaces the click and delete the query.
+
 ## Failure policy
 
 Every integration degrades toward "the feature disappears", never toward "the GUI
@@ -419,6 +475,8 @@ breaks".
 | `test/locales.test.mjs` | Key-set parity and placeholder parity between languages |
 | `test/manifest.test.mjs` | Every packaging fact the client-module kernel validates |
 | `test/activation.test.mjs` | That `apply` survives a context carrying only its declared services |
+| `test/status-page.test.mjs` | The reuse rule: an open browser tab is revealed, a foreign session's tab is not |
+| `test/todo-toggle.test.mjs` | Panel selection and the empty-list answer |
 
 `test/activation.test.mjs` exists because the most expensive defect found during
 development was an activation-time throw that removed every registration at once

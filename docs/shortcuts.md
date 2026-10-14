@@ -11,10 +11,12 @@ underlying capability is missing.
 | <kbd>Ctrl</kbd>+<kbd>Q</kbd> | `keyboard-shortcut.cycle-permission` | Cycle to the next permission mode | `desktop:windows`, `desktop:macos` |
 | <kbd>Ctrl</kbd>+<kbd>1</kbd> | `keyboard-shortcut.effort-down` | Lower the reasoning effort one level | `desktop:*` |
 | <kbd>Ctrl</kbd>+<kbd>2</kbd> | `keyboard-shortcut.effort-up` | Raise the reasoning effort one level | `desktop:*` |
+| <kbd>Alt</kbd>+<kbd>A</kbd> | `keyboard-shortcut.status-page` | Open the DeepSeek status page in the sidebar browser | `desktop:*` |
+| <kbd>Ctrl</kbd>+<kbd>L</kbd> | `keyboard-shortcut.toggle-todos` | Expand or collapse the task list | `desktop:*` |
 | <kbd>PgUp</kbd> | — | Go to the previous input | All |
 | <kbd>PgDn</kbd> | — | Go to the next input | All |
 
-All four commands are rebindable. The two page keys have no command id at all:
+All six commands are rebindable. The two page keys have no command id at all:
 they are read by the plugin rather than registered, so they appear on the
 settings page as read-only rows. The reason is covered under
 [Why the page keys have no binding](#why-the-page-keys-have-no-binding).
@@ -28,6 +30,8 @@ registering the command, and rejects a reserved combination outright.
 |---|---|---|
 | <kbd>Ctrl</kbd>+<kbd>Q</kbd> | Reserved, except Desktop Windows and macOS | `KeyQ` with the primary modifier is on the reservation list |
 | <kbd>Ctrl</kbd>+<kbd>1</kbd> / <kbd>Ctrl</kbd>+<kbd>2</kbd> | Not an admitted browser combination | A one-modifier digit chord is not in the Web allowlist |
+| <kbd>Alt</kbd>+<kbd>A</kbd> | Not an admitted browser combination | A single non-primary modifier is not in the Web allowlist, and `Ctrl+A` is reserved |
+| <kbd>Ctrl</kbd>+<kbd>L</kbd> | Not an admitted browser combination | `KeyL` is not in the Web allowlist, and a browser owns the key |
 | <kbd>PgUp</kbd> / <kbd>PgDn</kbd> | Rejected for editable commands | A combination with no modifier fails the "modifier required" rule |
 
 The two Desktop profiles short-circuit the reservation check, which is why
@@ -37,7 +41,11 @@ hand; it just ships without a default where the combination cannot work.
 
 For macOS the modifier is written literally as `control` rather than as
 `primary`, so the shortcut is <kbd>Ctrl</kbd>+<kbd>Q</kbd> and not
-<kbd>Cmd</kbd>+<kbd>Q</kbd>, which is the system quit shortcut.
+<kbd>Cmd</kbd>+<kbd>Q</kbd>, which is the system quit shortcut. The same rule
+applies to <kbd>Ctrl</kbd>+<kbd>L</kbd>, which would otherwise become the
+<kbd>Cmd</kbd>+<kbd>L</kbd> the browser and the application both claim, and to
+<kbd>Alt</kbd>+<kbd>A</kbd>, which would otherwise become the
+<kbd>Cmd</kbd>+<kbd>A</kbd> "select all".
 
 Page Up and Page Down take the fixed-action route instead, which skips the
 reservation table entirely. That is the same route DSH's own Enter and Escape
@@ -84,6 +92,38 @@ Moves one level along the model's advertised escalation ladder.
 - A model that advertises no levels reports that instead.
 - An unknown current level is treated as sitting before the first one, so the
   first press establishes a concrete level.
+
+### `keyboard-shortcut.status-page` — open the DeepSeek status page
+
+Opens <https://status.deepseek.com/> in the sidebar browser.
+
+- **Blocked** with "No session is open." when no session is on screen. The
+  sidebar's own commands behave the same way: a column is always bound to a
+  session, so a shortcut with no session has nothing to attach a tab to.
+- **Reuses the open page.** A second press reveals the browser tab that is
+  already there instead of opening another one, and expands the column first if
+  it is collapsed.
+- A tab belonging to another session is not treated as "already open": the
+  sidebar only reveals tabs in the session on screen, so counting it would make
+  the shortcut do nothing.
+- **Not delivered** inside a modal.
+- The URL is fixed. Rebinding the key does not change it; the sidebar browser's
+  own address bar is still the way to navigate anywhere else.
+
+### `keyboard-shortcut.toggle-todos` — expand or collapse the task list
+
+Toggles the checklist DSH shows above the composer.
+
+- Shows "No task list is open." when the session has no checklist. DSH renders
+  nothing at all for an empty list, so an absent panel is the "nothing to toggle"
+  case rather than a failure.
+- Expands a collapsed list and collapses an expanded one; the header's own
+  chevron and `aria-expanded` state are what change, so the panel behaves exactly
+  as if the header had been clicked.
+- **Not delivered** inside a modal.
+- The list is expanded by default when a turn writes one, and collapses again
+  when the next turn starts, so this shortcut is for reading back a list that has
+  already scrolled past.
 
 ### Page navigation — move between inputs
 

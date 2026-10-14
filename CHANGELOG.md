@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`Alt+A` opens the DeepSeek status page in the sidebar browser** (Desktop).
+  The page is reused: a second press reveals the browser tab that is already
+  open, expanding the column first if it is collapsed, instead of piling up
+  duplicate tabs. The sidebar's own `openTab` cannot do this — the browser tab
+  type is registered `multiple: true`, so it always mints a new tab — so the
+  lookup is done against the sidebar's tab inventory before opening. A tab
+  belonging to another session is ignored, because the sidebar only reveals tabs
+  in the session on screen.
+- **`Ctrl+L` expands or collapses the task list** (Desktop). DSH keeps the
+  collapsed state inside the panel component and publishes no handle, so the
+  shortcut presses the same header button a click would. A session with no task
+  list renders no panel at all, which is reported as "no task list is open"
+  rather than treated as a failure.
+
 ### Fixed
 
 - **`Ctrl+Q`, `Ctrl+1` and `Ctrl+2` reported their capability as unavailable.**

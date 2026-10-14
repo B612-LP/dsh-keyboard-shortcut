@@ -69,7 +69,9 @@ const DECLARED = {
   slash: 'Slash',
   keyQ: 'KeyQ',
   digit1: 'Digit1',
-  digit2: 'Digit2'
+  digit2: 'Digit2',
+  keyA: 'KeyA',
+  keyL: 'KeyL'
 }
 
 describe('declared key codes', () => {

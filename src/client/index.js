@@ -19,6 +19,8 @@
  * | Open-settings command | `ctx.shortcuts.register` |
  * | Permission-cycle command | `ctx.shortcuts.register` |
  * | Reasoning-effort commands | `ctx.shortcuts.register` |
+ * | Status-page command | `ctx.shortcuts.register`, see `status-page.js` |
+ * | Task-list command | `ctx.shortcuts.register`, see `todo-toggle.js` |
  * | Previous/next input | `observeFixedInput` only — see `NAV_KEYS` |
  * | Composer Enter remap | capture-phase `keydown`, see `composer-keys.js` |
  *
@@ -52,6 +54,8 @@ import { installComposerKeys } from './composer-keys.js'
 import { createPermissionCatalog, cyclePermissionMode, permissionLabel } from './permission-cycle.js'
 import { stepEffort } from './effort-step.js'
 import { navigateInput } from './prompt-nav.js'
+import { openStatusPage } from './status-page.js'
+import { toggleTodoList } from './todo-toggle.js'
 import { createSettingsPage } from './settings-page.js'
 import { sectionIndex } from './slots.js'
 import { openShortcutSection, reconcileShortcutKey, OPEN_COMMAND_ID, SECTION_ID } from './open-settings.js'
@@ -67,7 +71,9 @@ const OWNED_COMMANDS = [
   OPEN_COMMAND_ID,
   'keyboard-shortcut.cycle-permission',
   'keyboard-shortcut.effort-up',
-  'keyboard-shortcut.effort-down'
+  'keyboard-shortcut.effort-down',
+  'keyboard-shortcut.status-page',
+  'keyboard-shortcut.toggle-todos'
 ]
 
 /**
@@ -106,6 +112,41 @@ const EFFORT_UP_DEFAULTS = {
   'desktop:windows': { code: 'Digit2', modifiers: ['control'] },
   'desktop:macos': { code: 'Digit2', modifiers: ['control'] },
   'desktop:linux': { code: 'Digit2', modifiers: ['control'] }
+}
+
+/**
+ * Alt+A opens the DeepSeek status page in the right sidebar.
+ *
+ * Desktop only, and for two independent reasons. On Web the combination fails
+ * the browser allowlist — a single non-primary modifier is not an admitted
+ * chord there — and `KeyA` with the primary modifier is reserved by the
+ * reservation table, so the shortcut could not be declared as <kbd>Ctrl</kbd>+A
+ * instead. On Desktop Windows and macOS the reservation check short-circuits
+ * entirely, and on Desktop Linux two modifiers including the primary one clear
+ * it, so the same declaration is accepted on all three.
+ *
+ * `alt` is written literally: <kbd>Alt</kbd>+A is what the shortcut is, and the
+ * alias `primary` would silently become <kbd>Cmd</kbd>+A on macOS.
+ */
+const STATUS_DEFAULTS = {
+  'desktop:windows': { code: 'KeyA', modifiers: ['alt'] },
+  'desktop:macos': { code: 'KeyA', modifiers: ['alt'] },
+  'desktop:linux': { code: 'KeyA', modifiers: ['alt'] }
+}
+
+/**
+ * Ctrl+L expands or collapses the task list.
+ *
+ * Desktop only: <kbd>Ctrl</kbd>+L is not an admitted browser combination, and a
+ * browser owns it for "focus the address bar" anyway. `control` is written
+ * literally rather than as `primary`, matching the rest of this plugin, so
+ * macOS gets <kbd>Ctrl</kbd>+<kbd>L</kbd> rather than the
+ * <kbd>Cmd</kbd>+<kbd>L</kbd> the browser and the application both claim.
+ */
+const TODO_DEFAULTS = {
+  'desktop:windows': { code: 'KeyL', modifiers: ['control'] },
+  'desktop:macos': { code: 'KeyL', modifiers: ['control'] },
+  'desktop:linux': { code: 'KeyL', modifiers: ['control'] }
 }
 
 /**
@@ -378,6 +419,61 @@ export function apply(ctx) {
   register(
     effortCommand('keyboard-shortcut.effort-up', 1, EFFORT_UP_DEFAULTS, 'command.effortUp', 'toast.effortUp')
   )
+
+  register({
+    id: 'keyboard-shortcut.status-page',
+    label: () => t('command.statusPage'),
+    aliases: ['status', 'deepseek status', 'service status'],
+    defaults: STATUS_DEFAULTS,
+    regions: ['page', 'editable'],
+    modals: [],
+    resolve: () => {
+      // `sidebarRight` is a reflect-provided service, not an injected one: it is
+      // read with `ctx.get` at the moment the key is pressed, so the plugin still
+      // loads in a composition whose sidebar was never mounted.
+      const sidebar = ctx.get('sidebarRight')
+      if (sidebar === undefined) {
+        return { status: 'blocked', reason: t('toast.sidebarUnavailable') }
+      }
+      return {
+        status: 'handled',
+        run: () => {
+          try {
+            const outcome = openStatusPage(sidebar)
+            if (outcome === 'no-sidebar') notices.show(t('toast.sidebarUnavailable'))
+            else if (outcome === 'no-session') notices.show(t('toast.noSession'))
+          } catch (error) {
+            report(error, 'toast.sidebarUnavailable')
+          }
+        }
+      }
+    }
+  })
+
+  register({
+    id: 'keyboard-shortcut.toggle-todos',
+    label: () => t('command.toggleTodos'),
+    aliases: ['todo', 'task list', 'checklist'],
+    defaults: TODO_DEFAULTS,
+    regions: ['page', 'editable'],
+    modals: [],
+    resolve: () => {
+      // The panel only exists while the session has a task list, and the list is
+      // drawn in the composer region, so a blocked resolution here would be a
+      // lie: the key is accepted and the run reports whether there was a list.
+      if (doc === undefined) return { status: 'blocked', reason: t('toast.todoUnavailable') }
+      return {
+        status: 'handled',
+        run: () => {
+          try {
+            if (toggleTodoList(doc) === 'unavailable') notices.show(t('toast.todoUnavailable'))
+          } catch (error) {
+            report(error, 'toast.todoUnavailable')
+          }
+        }
+      }
+    }
+  })
 
   // ── Prompt navigation ─────────────────────────────────────────────────────
   // Page Up and Page Down carry no modifier and cannot be published as fixed

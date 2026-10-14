@@ -105,6 +105,8 @@ node --test test/prefs.test.mjs   # one file
 | `open-settings.test.mjs` | The `Ctrl+/` reconciliation matrix |
 | `settings-page.test.mjs` | The page's rendered markup through `react-dom/server` |
 | `key-codes.test.mjs` | The registry's accepted-code whitelist |
+| `status-page.test.mjs` | The status-page reuse rule and the session scoping of the lookup |
+| `todo-toggle.test.mjs` | Panel selection, the composer-region preference, and the empty-list answer |
 
 Four of these exist because of specific defects rather than for coverage:
 

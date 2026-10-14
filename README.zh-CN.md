@@ -1,12 +1,12 @@
 # dsh-keyboard-shortcut
 
-为 DeepSeek Harness（DSH）提供「快捷键」设置页，以及权限模式切换、思考强度调节、输入跳转和可选的输入框按键重映射。
+为 DeepSeek Harness（DSH）提供「快捷键」设置页，以及权限模式切换、思考强度调节、输入跳转、状态页快捷键、任务清单开关和可选的输入框按键重映射。
 
 [English](README.md)
 
 ## 概述
 
-`dsh-keyboard-shortcut` 在 DSH 的设置面板中增加一个页面，并为应用增加五个快捷键。该页面会列出当前运行中的所有按键，允许你修改本插件拥有的按键，并提供一个用于重映射输入框 Enter 键行为的开关。
+`dsh-keyboard-shortcut` 在 DSH 的设置面板中增加一个页面，并为应用增加七个快捷键。该页面会列出当前运行中的所有按键，允许你修改本插件拥有的按键，并提供一个用于重映射输入框 Enter 键行为的开关。
 
 本插件添加的每个快捷键都是一个普通的 DSH 命令：它会出现在快捷键参考中，可以被重新绑定，并遵守与内置命令相同的冲突规则。
 
@@ -47,6 +47,8 @@ dsh plugin --profile <profile> add dsh-keyboard-shortcut
 | <kbd>Ctrl</kbd>+<kbd>Q</kbd> | 切换到下一个权限模式 | 桌面版 Windows、macOS |
 | <kbd>Ctrl</kbd>+<kbd>1</kbd> | 降低一档思考强度 | 桌面版 |
 | <kbd>Ctrl</kbd>+<kbd>2</kbd> | 提高一档思考强度 | 桌面版 |
+| <kbd>Alt</kbd>+<kbd>A</kbd> | 在侧边栏浏览器中打开 DeepSeek 服务状态页 | 桌面版 |
+| <kbd>Ctrl</kbd>+<kbd>L</kbd> | 展开或收起任务清单 | 桌面版 |
 | <kbd>PgUp</kbd> | 跳到上一条输入 | 全部（直接读取） |
 | <kbd>PgDn</kbd> | 跳到下一条输入 | 全部（直接读取） |
 | <kbd>Ctrl</kbd>+<kbd>/</kbd> | 打开本插件的设置页 | 全部 |
@@ -84,7 +86,9 @@ dsh plugin --profile <profile> add dsh-keyboard-shortcut
 
 ## 已知限制
 
-- **模式切换与思考强度快捷键默认仅在桌面版可用。** DSH 在桌面版 Windows 和 macOS 之外保留了 <kbd>Ctrl</kbd>+<kbd>Q</kbd>，而浏览器会占用 <kbd>Ctrl</kbd>+<kbd>1</kbd>…<kbd>Ctrl</kbd>+<kbd>8</kbd> 切换标签页。这两个命令在所有平台都存在、可手动绑定，只是在无法工作的平台上默认不绑定。
+- **模式切换、思考强度、状态页与任务清单快捷键默认仅在桌面版可用。** DSH 在桌面版 Windows 和 macOS 之外保留了 <kbd>Ctrl</kbd>+<kbd>Q</kbd>，而浏览器会占用 <kbd>Ctrl</kbd>+<kbd>1</kbd>…<kbd>Ctrl</kbd>+<kbd>8</kbd> 切换标签页。<kbd>Alt</kbd>+<kbd>A</kbd> 与 <kbd>Ctrl</kbd>+<kbd>L</kbd> 根本不在浏览器的放行名单内：单个非主修饰键会被拒绝，而且这两个键都已被占用。这四个命令在所有平台都存在、可手动绑定，只是在无法工作的平台上默认不绑定。
+- **状态页快捷键会复用已打开的页面。** 侧边栏浏览器注册为可多次打开的标签类型，因此通过侧边栏自身的 API 打开总会新建标签。插件改为先查找已有的浏览器标签并显示它，必要时先展开侧边栏。属于其他会话的标签会被忽略，因为侧边栏只会显示当前会话中的标签。
+- **任务清单开关点击的是面板标题。** DSH 把展开状态保存在面板组件内部，没有对外句柄，因此该快捷键驱动的是与鼠标点击相同的按钮。没有任务清单的会话不会渲染任何内容，快捷键会如实提示而不是报错。
 - **输入跳转驱动的是轮次导航条。** DSH 没有公开「跳转到某一轮」的服务，因此该快捷键触发导航条自身的刻度。一轮以其第一条用户消息为锚点，所以「上一条输入」等同于「上一轮」。
 - **翻页键无法注册，因此直接读取原始输入。** DSH 的快捷键注册表会用一份封闭白名单校验每个声明的键码（`Key*`、`Digit*`、`F1`–`F24`，以及一组固定命名键，其中**不含**翻页键），`registerFixed` 会预先规范化绑定并抛出 `Unsupported shortcut code: PageUp`，注册注定失败。<kbd>PgUp</kbd>/<kbd>PgDn</kbd> 因此通过 `observeFixedInput` 处理：键盘层在派发前把每次 keydown 都交给该观察者，与注册无关。这两个键在所有平台都可用，只是没有目录行，设置页从本地表把它们渲染为只读行。
 - **输入框重映射是 DOM 层集成。** 输入框的键位表由 `dsh-client-ui-conversation` 私有持有；该选项改写事件的修饰键标志，而不是重新实现发送逻辑。原因与失效场景见 [docs/design.md](docs/design.md)。

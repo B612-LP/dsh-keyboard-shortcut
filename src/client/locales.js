@@ -75,6 +75,8 @@ export const en = {
   'command.effortDown': 'Decrease reasoning effort',
   'command.previousInput': 'Go to previous input',
   'command.nextInput': 'Go to next input',
+  'command.statusPage': 'Open the DeepSeek status page',
+  'command.toggleTodos': 'Expand or collapse the task list',
 
   // Runtime feedback.
   'toast.permission': 'Permission mode: {name}',
@@ -88,7 +90,9 @@ export const en = {
   'toast.navUnavailable': 'No turn navigator is available for this session.',
   'toast.navAtEdge': 'No {direction} input to move to.',
   'toast.previous': 'previous',
-  'toast.next': 'next'
+  'toast.next': 'next',
+  'toast.sidebarUnavailable': 'The sidebar is unavailable in this window.',
+  'toast.todoUnavailable': 'This session has no task list.'
 }
 
 /** Simplified Chinese copy. Mirrors {@link en} key for key. */
@@ -140,6 +144,8 @@ export const zh = {
   'command.effortDown': '降低思考强度',
   'command.previousInput': '跳到上一条输入',
   'command.nextInput': '跳到下一条输入',
+  'command.statusPage': '打开 DeepSeek 服务状态页',
+  'command.toggleTodos': '展开或收起任务清单',
 
   'toast.permission': '权限模式：{name}',
   'toast.permissionUnavailable': '当前会话无法使用权限模式。',
@@ -152,5 +158,7 @@ export const zh = {
   'toast.navUnavailable': '当前会话没有可用的轮次导航。',
   'toast.navAtEdge': '没有{direction}一条输入了。',
   'toast.previous': '上',
-  'toast.next': '下'
+  'toast.next': '下',
+  'toast.sidebarUnavailable': '当前窗口没有可用的侧边栏。',
+  'toast.todoUnavailable': '当前会话没有任务清单。'
 }

@@ -194,7 +194,9 @@ describe('client half activation', () => {
       'keyboard-shortcut.open',
       'keyboard-shortcut.cycle-permission',
       'keyboard-shortcut.effort-up',
-      'keyboard-shortcut.effort-down'
+      'keyboard-shortcut.effort-down',
+      'keyboard-shortcut.status-page',
+      'keyboard-shortcut.toggle-todos'
     ]) {
       assert.ok(ids.includes(id), `${id} must be registered`)
     }
@@ -207,6 +209,31 @@ describe('client half activation', () => {
       false,
       'no fixed action may be registered for codes the registry rejects'
     )
+  })
+
+  it('declares no Web default for a combination the Web allowlist refuses', () => {
+    // `register` throws `Unsupported Web shortcut: <id>` for a Web default the
+    // browser allowlist does not admit, and Alt+A / Ctrl+L are both refused
+    // there. Declaring one would take the whole command down, so the profiles
+    // are pinned here rather than left to the registry to reject at runtime.
+    const provided = { locale: localeService() }
+    const { context, commands } = fakeContext(provided)
+
+    const exports = loadClient((spec) => {
+      if (spec === 'react') return {}
+      throw new Error(`unexpected external: ${spec}`)
+    })
+    exports.apply(context)
+
+    for (const command of commands) {
+      for (const profile of Object.keys(command.defaults ?? {})) {
+        assert.doesNotMatch(
+          profile,
+          /^web:/u,
+          `${command.id} must not declare a Web default (${profile})`
+        )
+      }
+    }
   })
 
   it('subscribes to raw fixed input so the page keys still work', () => {
