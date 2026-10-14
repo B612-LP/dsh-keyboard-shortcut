@@ -26,11 +26,22 @@ const ROW = 'dshKbd_row'
 /**
  * Build the service object the page renders from.
  *
- * @param options - Catalog, preferences, and recorder.
+ * `fixedKeys` defaults to the page keys the plugin reads from the raw input
+ * stream. They have no catalog row — see `test/key-codes.test.mjs` for why — so
+ * the page renders them from this local table, and a stub that omitted it would
+ * leave the whole section empty without any other assertion noticing.
+ *
+ * @param options - Catalog, preferences, fixed keys, and recorder.
  * @returns The service face.
  */
 function serviceFor(options = {}) {
   const prefs = { optimizeComposerKeys: false, takeOverShortcutKey: true, ...options.prefs }
+  const fixed =
+    options.fixed ??
+    [
+      { id: 'nav.keyboard-shortcut.previous', label: 'Go to the previous input', keys: ['PgUp'], hint: 'Read directly.' },
+      { id: 'nav.keyboard-shortcut.next', label: 'Go to the next input', keys: ['PgDn'], hint: 'Read directly.' }
+    ]
   const writes = []
   return {
     writes,
@@ -44,6 +55,7 @@ function serviceFor(options = {}) {
       prefs[key] = value
     },
     describeBinding: () => ({ keys: [], conflicts: [] }),
+    fixedKeys: () => fixed,
     saveBinding: async () => 'saved',
     setRecording: async () => {}
   }
@@ -143,6 +155,23 @@ describe('settings page rendering', () => {
     const markup = render(service)
     assert.match(markup, /t:row\.conflict/u)
     assert.match(markup, /session\.new/u, 'the conflicting command must be named')
+  })
+
+  it('lists the page keys as read-only rows', () => {
+    const markup = render(serviceFor({ catalog: [FOREIGN_ROW] }))
+    assert.match(markup, /t:section\.fixed\.title/u)
+    assert.match(markup, /Go to the previous input/u)
+    assert.match(markup, /Go to the next input/u)
+    assert.match(markup, /PgUp/u)
+    assert.match(markup, /PgDn/u)
+    // These rows have no catalog entry, so they must not offer an edit control
+    // and must not be described as unbound.
+    assert.doesNotMatch(markup, /t:row\.change/u, 'a page-key row must be read-only')
+  })
+
+  it('renders an empty state when no fixed keys are published', () => {
+    const markup = render(serviceFor({ catalog: [FOREIGN_ROW], fixed: [] }))
+    assert.match(markup, /t:row\.unbound/u)
   })
 
   it('renders an empty state when the catalog is empty', () => {
