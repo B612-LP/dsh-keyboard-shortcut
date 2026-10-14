@@ -100,17 +100,31 @@ node --test test/prefs.test.mjs   # one file
 | `locales.test.mjs` | Key-set and placeholder parity between languages |
 | `manifest.test.mjs` | Every packaging fact the client-module kernel validates |
 | `activation.test.mjs` | That `apply` survives a context carrying only its declared services |
+| `effort-step.test.mjs` | Stepping the reasoning level, clamping at both ends, and the refused cases |
+| `permission-cycle.test.mjs` | Reading, advancing, and wrapping the permission catalog |
+| `open-settings.test.mjs` | The `Ctrl+/` reconciliation matrix |
+| `settings-page.test.mjs` | The page's rendered markup through `react-dom/server` |
+| `key-codes.test.mjs` | The registry's accepted-code whitelist |
 
-Two of these exist because of specific defects rather than for coverage:
+Four of these exist because of specific defects rather than for coverage:
 
 - **`activation.test.mjs`** mounts the plugin against a fake context that
   withholds everything outside the `inject` list, which is what a real first
   mount looks like. The most expensive defect found during development was an
   activation-time throw that removed every registration at once while the Host
-  still reported the row `active` — the page simply never appeared.
+  still reported the row `active` — the page simply never appeared. Its
+  `registerFixed` stub reproduces the registry's own code validation, so a
+  registration the real service would reject cannot pass.
 - **`manifest.test.mjs`** reproduces the kernel's own manifest checks, so a
   packaging mistake fails a local test instead of looking like a live-graph
   problem.
+- **`key-codes.test.mjs`** transcribes the registry's accepted-code whitelist and
+  asserts which declared codes it admits. Page Up and Page Down are not in it,
+  and because every registration is wrapped in a guard, a rejected code produced
+  a warning rather than an error — the feature was simply absent with nothing
+  failing. This suite is what turns that class of omission into a red test.
+- **`settings-page.test.mjs`** renders the page to static markup, which is how
+  the missing `getServerSnapshot` argument on `useSyncExternalStore` was found.
 
 ## Install for local development
 
@@ -196,9 +210,9 @@ own.
 ### What counts as a breaking change
 
 Changing any identifier a user or another plugin can depend on requires a major
-version: command ids (`keyboard-shortcut.*`, `fixed.keyboard-shortcut.*`), the
-section id (`keyboard-shortcut`), the storage key
-(`dsh.keyboard-shortcut.v1`), and the locale namespace (`keyboard-shortcut`).
+version: command ids (`keyboard-shortcut.*`), the section id
+(`keyboard-shortcut`), the storage key (`dsh.keyboard-shortcut.v1`), and the
+locale namespace (`keyboard-shortcut`).
 
 Adding a shortcut, a preference, or a settings section is a minor release.
 Behaviour fixes that change no identifier are patches.

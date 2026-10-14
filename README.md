@@ -60,8 +60,8 @@ sections:
 | <kbd>Ctrl</kbd>+<kbd>Q</kbd> | Cycle to the next permission mode | Desktop Windows, macOS |
 | <kbd>Ctrl</kbd>+<kbd>1</kbd> | Lower the reasoning effort one level | Desktop |
 | <kbd>Ctrl</kbd>+<kbd>2</kbd> | Raise the reasoning effort one level | Desktop |
-| <kbd>PgUp</kbd> | Go to the previous input | All |
-| <kbd>PgDn</kbd> | Go to the next input | All |
+| <kbd>PgUp</kbd> | Go to the previous input | All (fixed) |
+| <kbd>PgDn</kbd> | Go to the next input | All (fixed) |
 | <kbd>Ctrl</kbd>+<kbd>/</kbd> | Open this plugin's settings page | All |
 
 <kbd>Ctrl</kbd>/<kbd>Cmd</kbd>+<kbd>/</kbd> is the built-in shortcut reference's
@@ -116,6 +116,16 @@ built-in picker runs. It performs no filesystem access and no network requests.
 - **Prompt navigation drives the turn rail.** DSH publishes no service for
   jumping to a turn, so the shortcut activates the rail's own marks. A turn is
   anchored at its first user message, so "previous input" means "previous turn".
+- **The page keys cannot be registered, so they are read raw.**
+  <kbd>PgUp</kbd>/<kbd>PgDn</kbd> are handled through `observeFixedInput`
+  rather than `registerFixed`, because DSH's shortcut registry validates every
+  declared code against a closed whitelist — `Key*`, `Digit*`, `F1`–`F24`, and a
+  fixed set of named keys that does **not** include the page keys.
+  `registerFixed` normalizes its bindings up front and throws
+  `Unsupported shortcut code: PageUp`, so a registration could never succeed.
+  The keyboard layer forwards every keydown to `observeFixedInput` regardless of
+  registration, so the keys work; they just have no catalog row, and the settings
+  page lists them from a local table as non-rebindable rows.
 - **The composer remap is a DOM-layer integration.** The composer's keymap is
   private to `dsh-client-ui-conversation`; the option rewrites an event's
   modifier flags rather than reimplementing the send logic. See

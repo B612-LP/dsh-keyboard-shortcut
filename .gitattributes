@@ -1,0 +1,9 @@
+# Normalize line endings so a Windows checkout and a Unix checkout produce the
+# same bytes. The build output is committed, and `npm run check` compares bytes,
+# so an unintended CRLF conversion would otherwise show up as a stale build.
+* text=auto eol=lf
+
+*.png binary
+*.ico binary
+*.woff binary
+*.woff2 binary

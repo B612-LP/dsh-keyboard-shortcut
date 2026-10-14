@@ -33,7 +33,9 @@ Initial release.
   usually "off".
 - **`PgUp` and `PgDn` move between inputs.** They activate DSH's turn rail marks,
   so history paging and scroll compensation stay owned by the feature that
-  implements them.
+  implements them. Because DSH's shortcut registry rejects `PageUp`/`PageDown` as
+  binding codes, these two keys are read from the raw input stream instead of
+  being registered, and appear on the settings page as read-only rows.
 - **Input-optimisation switch** (off by default). Rotates the composer's Enter
   gestures: Enter inserts a line break, `Ctrl+Enter` sends, and `Shift+Enter`
   uses the complementary Queue/Steer action.

@@ -21,6 +21,17 @@ import { describe, it } from 'node:test'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 
+/** Patterned codes the real registry accepts. */
+const ACCEPTED_CODES = /^(Key[A-Z]|Digit[0-9]|F([1-9]|1[0-9]|2[0-4]))$/u
+
+/** Named codes the real registry accepts. Page Up/Down are absent by design. */
+const NAMED_CODES = new Set([
+  'Slash', 'Comma', 'Period', 'Backslash', 'Backquote', 'Minus', 'Equal',
+  'BracketLeft', 'BracketRight', 'Semicolon', 'Quote', 'Enter', 'Escape',
+  'Space', 'Tab', 'Backspace', 'Delete', 'ArrowUp', 'ArrowDown',
+  'ArrowLeft', 'ArrowRight'
+])
+
 /**
  * Load the built client bundle and materialize its factory.
  *
@@ -62,6 +73,7 @@ function fakeContext(provided, options = {}) {
   const slots = []
   const commands = []
   const messages = []
+  const observers = []
   const context = {
     effect(body, label) {
       effects.push(label)
@@ -96,10 +108,19 @@ function fakeContext(provided, options = {}) {
       return () => {}
     },
     registerFixed(command) {
+      // The real registry normalizes every declared binding and throws for a
+      // code outside its whitelist. Reproducing that here means a registration
+      // the real service would reject cannot pass this test.
+      for (const binding of command.bindings) {
+        if (!ACCEPTED_CODES.test(binding.code) && !NAMED_CODES.has(binding.code)) {
+          throw new Error(`Unsupported shortcut code: ${binding.code}`)
+        }
+      }
       commands.push(command)
       return () => {}
     },
-    observeFixedInput() {
+    observeFixedInput(listener) {
+      observers.push(listener)
       return () => {}
     },
     catalog: { getSnapshot: () => [], subscribe: () => () => {} },
@@ -108,7 +129,7 @@ function fakeContext(provided, options = {}) {
     recording: async () => {},
     describeBinding: () => ({ keys: [], conflicts: [] })
   }
-  return { context, effects, slots, commands, messages }
+  return { context, effects, slots, commands, messages, observers }
 }
 
 /**
@@ -177,10 +198,43 @@ describe('client half activation', () => {
     ]) {
       assert.ok(ids.includes(id), `${id} must be registered`)
     }
-    assert.ok(
+    // Page Up/Down must NOT be registered: their codes are outside the
+    // registry's whitelist, so `registerFixed` would throw for them. The
+    // `registerFixed` stub above reproduces that rejection, so this assertion
+    // fails if the impossible registration ever comes back.
+    assert.equal(
       ids.some((id) => id.startsWith('fixed.')),
-      'the Page Up/Down rows must be registered as fixed actions'
+      false,
+      'no fixed action may be registered for codes the registry rejects'
     )
+  })
+
+  it('subscribes to raw fixed input so the page keys still work', () => {
+    const provided = { locale: localeService() }
+    const { context, observers } = fakeContext(provided)
+
+    const exports = loadClient((spec) => {
+      if (spec === 'react') return {}
+      throw new Error(`unexpected external: ${spec}`)
+    })
+    exports.apply(context)
+
+    // The observer is the *only* mechanism behind prompt navigation, so losing
+    // it would silently disable Page Up/Down with no registration to blame.
+    assert.equal(observers.length, 1, 'exactly one fixed-input observer must be installed')
+
+    // A bare Page Down is navigation; the same key with a modifier is not.
+    const seen = []
+    const input = (gesture) => ({
+      type: 'keydown',
+      gesture: { composing: false, defaultPrevented: false, alt: false, control: false, meta: false, shift: false, ...gesture },
+      context: { modal: null, region: 'page' },
+      consume: () => seen.push('consumed')
+    })
+    observers[0](input({ code: 'KeyA' }))
+    assert.deepEqual(seen, [], 'an unrelated key must be ignored')
+    observers[0](input({ code: 'PageDown', control: true }))
+    assert.deepEqual(seen, [], 'a modified page key belongs to someone else')
   })
 
   it('survives a shortcut registration that conflicts with another plugin', () => {

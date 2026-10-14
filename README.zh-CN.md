@@ -46,8 +46,8 @@ dsh plugin --profile <profile> add dsh-keyboard-shortcut
 | <kbd>Ctrl</kbd>+<kbd>Q</kbd> | 切换到下一个权限模式 | 桌面版 Windows、macOS |
 | <kbd>Ctrl</kbd>+<kbd>1</kbd> | 降低一档思考强度 | 桌面版 |
 | <kbd>Ctrl</kbd>+<kbd>2</kbd> | 提高一档思考强度 | 桌面版 |
-| <kbd>PgUp</kbd> | 跳到上一条输入 | 全部 |
-| <kbd>PgDn</kbd> | 跳到下一条输入 | 全部 |
+| <kbd>PgUp</kbd> | 跳到上一条输入 | 全部（直接读取） |
+| <kbd>PgDn</kbd> | 跳到下一条输入 | 全部（直接读取） |
 | <kbd>Ctrl</kbd>+<kbd>/</kbd> | 打开本插件的设置页 | 全部 |
 
 <kbd>Ctrl</kbd>/<kbd>Cmd</kbd>+<kbd>/</kbd> 是内置快捷键参考的默认绑定。本插件通过快捷键偏好层接管它：参考弹窗不再占用该按键，但仍可从**设置 → 通用 → 编辑快捷键**进入。关闭开关即可恢复原始绑定。
@@ -85,6 +85,7 @@ dsh plugin --profile <profile> add dsh-keyboard-shortcut
 
 - **模式切换与思考强度快捷键默认仅在桌面版可用。** DSH 在桌面版 Windows 和 macOS 之外保留了 <kbd>Ctrl</kbd>+<kbd>Q</kbd>，而浏览器会占用 <kbd>Ctrl</kbd>+<kbd>1</kbd>…<kbd>Ctrl</kbd>+<kbd>8</kbd> 切换标签页。这两个命令在所有平台都存在、可手动绑定，只是在无法工作的平台上默认不绑定。
 - **输入跳转驱动的是轮次导航条。** DSH 没有公开「跳转到某一轮」的服务，因此该快捷键触发导航条自身的刻度。一轮以其第一条用户消息为锚点，所以「上一条输入」等同于「上一轮」。
+- **翻页键无法注册，因此直接读取原始输入。** DSH 的快捷键注册表会用一份封闭白名单校验每个声明的键码（`Key*`、`Digit*`、`F1`–`F24`，以及一组固定命名键，其中**不含**翻页键），`registerFixed` 会预先规范化绑定并抛出 `Unsupported shortcut code: PageUp`，注册注定失败。<kbd>PgUp</kbd>/<kbd>PgDn</kbd> 因此通过 `observeFixedInput` 处理：键盘层在派发前把每次 keydown 都交给该观察者，与注册无关。这两个键在所有平台都可用，只是没有目录行，设置页从本地表把它们渲染为只读行。
 - **输入框重映射是 DOM 层集成。** 输入框的键位表由 `dsh-client-ui-conversation` 私有持有；该选项改写事件的修饰键标志，而不是重新实现发送逻辑。原因与失效场景见 [docs/design.md](docs/design.md)。
 - **设置页导航图标是 DOM 补丁。** DSH 通过按分区 id 硬编码的分支选择导航图标，且注册项没有图标字段，因此图标通过 CSS mask 应用。
 - **录制会丢失 React 状态。** 重新绑定会重新注册命令并重新渲染页面，与任何目录变更一样。

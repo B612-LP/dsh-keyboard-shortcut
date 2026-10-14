@@ -309,7 +309,8 @@ function ReferenceRow(props) {
     h(
       'div',
       { className: CSS.rowText },
-      h('div', { className: CSS.rowTitle }, labelText(row.label) || row.id)
+      h('div', { className: CSS.rowTitle }, labelText(row.label) || row.id),
+      row.hint === undefined ? null : h('p', { className: CSS.rowHint }, row.hint)
     ),
     h('div', { className: CSS.control }, keycaps(row.keys, t))
   )
@@ -333,8 +334,8 @@ export function createSettingsPage(service) {
     const [recordingId, setRecordingId] = useState(undefined)
     const [status, setStatus] = useState(undefined)
 
-    const catalog = useSyncExternalStore(service.subscribeCatalog, service.getCatalog)
-    const prefs = useSyncExternalStore(service.subscribePrefs, service.getPrefs)
+    const catalog = useSyncExternalStore(service.subscribeCatalog, service.getCatalog, service.getCatalog)
+    const prefs = useSyncExternalStore(service.subscribePrefs, service.getPrefs, service.getPrefs)
 
     useEffect(() => {
       if (typeof document !== 'undefined') injectStyles(document)
@@ -350,6 +351,10 @@ export function createSettingsPage(service) {
     }, [recordingId])
 
     const rows = useMemo(() => (Array.isArray(catalog) ? catalog : []), [catalog])
+    const fixed = useMemo(
+      () => (typeof service.fixedKeys === 'function' ? service.fixedKeys() : []),
+      [service, t]
+    )
     const mine = useMemo(
       () => rows.filter((row) => service.ownedCommandIds.has(row.id)).sort((l, r) => l.id.localeCompare(r.id)),
       [rows]
@@ -392,6 +397,16 @@ export function createSettingsPage(service) {
                 describeBinding: service.describeBinding
               })
             )
+      ),
+
+      h(
+        'section',
+        { className: CSS.section },
+        h('h3', { className: CSS.sectionTitle }, t('section.fixed.title')),
+        h('p', { className: CSS.sectionText }, t('section.fixed.description')),
+        fixed.length === 0
+          ? h('p', { className: CSS.empty }, t('row.unbound'))
+          : fixed.map((row) => h(ReferenceRow, { key: row.id, row, t }))
       ),
 
       h(

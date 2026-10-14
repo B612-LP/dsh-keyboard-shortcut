@@ -46,6 +46,10 @@ export const en = {
   'row.reserved': 'Reserved by the system',
   'row.unsupported': 'Not available here',
   'row.edit': 'Change binding for {label}',
+  'row.fixedHint': 'Handled directly by this plugin and cannot be rebound.',
+  'section.fixed.title': 'Input navigation',
+  'section.fixed.description':
+    'Keys this plugin reads straight from the input stream. They are not part of the shortcut registry, so they stay fixed.',
 
   // Group titles.
   'group.application': 'Application',
@@ -113,6 +117,9 @@ export const zh = {
   'row.reserved': '系统保留',
   'row.unsupported': '当前环境不可用',
   'row.edit': '修改「{label}」的按键',
+  'row.fixedHint': '由本插件直接处理，无法改键。',
+  'section.fixed.title': '输入跳转',
+  'section.fixed.description': '本插件直接从输入流读取的按键。它们不属于快捷键注册表，因此固定不变。',
 
   'group.application': '应用',
   'group.input': '消息输入',

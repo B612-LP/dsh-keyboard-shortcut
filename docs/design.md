@@ -308,11 +308,24 @@ knows the marks it has mounted.
 **Terminals and modals.** Both are excluded: a modal owns the keyboard, and a
 terminal owns <kbd>PgUp</kbd>/<kbd>PgDn</kbd> for its own scrollback.
 
-**Fixed actions rather than a command.** Page Up and Page Down carry no modifier,
-which the shortcut service rejects for an *editable* command outside Desktop
-Windows and macOS. Fixed actions bypass that check — the same route DSH's own
-Enter and Escape rows take — and are dispatched through
-`observeFixedInput`, which is the only hook that sees an unmodified key.
+**Read raw, not registered.** Page Up and Page Down carry no modifier, which the
+shortcut service rejects for an *editable* command outside Desktop Windows and
+macOS (`modifier-required`), so a configurable command cannot carry them. A fixed
+action cannot either: `registerFixed` normalizes every declared binding through
+`normalizeBinding`, whose accepted set is `KeyA`–`KeyZ`, `Digit0`–`Digit9`,
+`F1`–`F24` plus a fixed table of named keys that omits the page keys. It throws
+`Unsupported shortcut code: PageUp` before the binding is ever stored.
+
+The plugin therefore never asks the registry to hold these keys. It subscribes
+with `observeFixedInput`, which the keyboard layer feeds **every** window keydown
+before DSH's own dispatch — registration plays no part in whether the observer
+fires, so an unmodifiable key still reaches the plugin. The cost is honest and
+visible: no catalog row, no rebinding, no entry in DSH's shortcut reference, and
+the settings page has to draw the two rows from a local table.
+
+A future DSH that widens the code whitelist should switch to `registerFixed` and
+delete the local table; one that publishes a "go to turn" service should call
+that service and delete the DOM work here.
 
 A future DSH that publishes a "go to turn" service should call that instead and
 the DOM work here should be deleted.
@@ -418,9 +431,9 @@ The package follows [Semantic Versioning](https://semver.org/).
   plugin can depend on.
 
 Identifiers users can depend on, and which therefore require a major or minor
-bump to change: command ids (`keyboard-shortcut.*`, `fixed.keyboard-shortcut.*`),
-the section id (`keyboard-shortcut`), the storage key
-(`dsh.keyboard-shortcut.v1`), and the locale namespace (`keyboard-shortcut`).
+bump to change: command ids (`keyboard-shortcut.*`), the section id
+(`keyboard-shortcut`), the storage key (`dsh.keyboard-shortcut.v1`), and the
+locale namespace (`keyboard-shortcut`).
 
 `dsh.compatibility.dshReleases` records per-release compatibility as evidence
 rather than as a range, and is updated when the plugin is verified against a DSH

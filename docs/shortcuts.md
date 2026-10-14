@@ -11,12 +11,13 @@ underlying capability is missing.
 | <kbd>Ctrl</kbd>+<kbd>Q</kbd> | `keyboard-shortcut.cycle-permission` | Cycle to the next permission mode | `desktop:windows`, `desktop:macos` |
 | <kbd>Ctrl</kbd>+<kbd>1</kbd> | `keyboard-shortcut.effort-down` | Lower the reasoning effort one level | `desktop:*` |
 | <kbd>Ctrl</kbd>+<kbd>2</kbd> | `keyboard-shortcut.effort-up` | Raise the reasoning effort one level | `desktop:*` |
-| <kbd>PgUp</kbd> | `fixed.keyboard-shortcut.previous` | Go to the previous input | All (fixed action) |
-| <kbd>PgDn</kbd> | `fixed.keyboard-shortcut.next` | Go to the next input | All (fixed action) |
+| <kbd>PgUp</kbd> | — | Go to the previous input | All |
+| <kbd>PgDn</kbd> | — | Go to the next input | All |
 
-All six are rebindable except the two fixed actions, which are read-only rows in
-the shortcut reference — the same treatment DSH gives Enter, Shift+Enter and
-Escape.
+All four commands are rebindable. The two page keys have no command id at all:
+they are read by the plugin rather than registered, so they appear on the
+settings page as read-only rows. The reason is covered under
+[Why the page keys have no binding](#why-the-page-keys-have-no-binding).
 
 ## Why some defaults are Desktop-only
 
@@ -84,10 +85,13 @@ Moves one level along the model's advertised escalation ladder.
 - An unknown current level is treated as sitting before the first one, so the
   first press establishes a concrete level.
 
-### `fixed.keyboard-shortcut.previous` / `.next` — move between inputs
+### Page navigation — move between inputs
 
 Activates the turn rail's own mark for the previous or next turn.
 
+- These two keys have **no command id and no catalog row**. They are read
+  directly by the plugin, so they do not appear in DSH's shortcut reference and
+  cannot be rebound. See [Why the page keys have no binding](#why-the-page-keys-have-no-binding).
 - A turn is anchored at its first user message, so "previous input" means
   "previous turn".
 - If the target mark is not mounted, the rail is scrolled to bring it in and the
@@ -97,6 +101,23 @@ Activates the turn rail's own mark for the previous or next turn.
   none — for example a transcript narrower than the rail's container threshold.
 - **Not delivered** inside a modal, or inside a terminal, which owns
   <kbd>PgUp</kbd>/<kbd>PgDn</kbd> for its own scrollback.
+
+#### Why the page keys have no binding
+
+DSH's shortcut registry accepts a closed set of physical codes. `normalizeBinding`
+rejects anything that is not `KeyA`–`KeyZ`, `Digit0`–`Digit9`, `F1`–`F24`, or one
+of `Slash, Comma, Period, Backslash, Backquote, Minus, Equal, BracketLeft,
+BracketRight, Semicolon, Quote, Enter, Escape, Space, Tab, Backspace, Delete,
+ArrowUp, ArrowDown, ArrowLeft, ArrowRight`. <kbd>PageUp</kbd> and
+<kbd>PageDown</kbd> are not in that table, and `registerFixed` normalizes every
+declared binding up front, so it throws `Unsupported shortcut code: PageUp`.
+
+The registry is therefore never asked to hold these keys. Instead the plugin
+subscribes with `observeFixedInput`, which the keyboard layer feeds every
+keydown before DSH's own dispatch — registration has no bearing on whether the
+observer fires. The keys work on every platform; they are simply invisible to
+the catalog, which is why the settings page draws them from a local table as
+read-only rows.
 
 ## The input-optimisation switch
 

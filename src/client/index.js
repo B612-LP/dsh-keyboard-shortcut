@@ -19,7 +19,7 @@
  * | Open-settings command | `ctx.shortcuts.register` |
  * | Permission-cycle command | `ctx.shortcuts.register` |
  * | Reasoning-effort commands | `ctx.shortcuts.register` |
- * | Previous/next input | `ctx.shortcuts.registerFixed` + `observeFixedInput` |
+ * | Previous/next input | `observeFixedInput` only — see `NAV_KEYS` |
  * | Composer Enter remap | capture-phase `keydown`, see `composer-keys.js` |
  *
  * ## Dependency policy
@@ -108,10 +108,25 @@ const EFFORT_UP_DEFAULTS = {
   'desktop:linux': { code: 'Digit2', modifiers: ['control'] }
 }
 
-/** Page keys for prompt navigation, as read-only fixed actions. */
-const FIXED_NAV = [
-  { id: 'fixed.keyboard-shortcut.previous', code: 'PageUp', labelKey: 'command.previousInput' },
-  { id: 'fixed.keyboard-shortcut.next', code: 'PageDown', labelKey: 'command.nextInput' }
+/**
+ * Page keys for prompt navigation.
+ *
+ * These are deliberately *not* registered as fixed actions. The shortcut
+ * registry validates every declared code against a closed whitelist — the
+ * patterned `Key*`, `Digit*`, and `F1`–`F24`, plus a fixed set of named keys
+ * that does **not** include `PageUp` or `PageDown`. `registerFixed` normalizes
+ * each binding up front and throws `Unsupported shortcut code: PageUp`, so a
+ * registration here can never succeed.
+ *
+ * Navigation therefore rides on `observeFixedInput` alone, which is an
+ * independent listener set: the keyboard layer forwards every keydown to it
+ * whether or not a matching command was ever registered. The keys still work;
+ * they simply have no catalog row, which is why the settings page lists them
+ * from this table instead of from the shortcut catalog.
+ */
+const NAV_KEYS = [
+  { id: 'nav.keyboard-shortcut.previous', code: 'PageUp', cap: 'PgUp', labelKey: 'command.previousInput' },
+  { id: 'nav.keyboard-shortcut.next', code: 'PageDown', cap: 'PgDn', labelKey: 'command.nextInput' }
 ]
 
 /** Attempts allowed for the startup Ctrl+/ reconciliation. */
@@ -365,27 +380,10 @@ export function apply(ctx) {
   )
 
   // ── Prompt navigation ─────────────────────────────────────────────────────
-  // Page Up and Page Down carry no modifier, which `bindingIssue` rejects for an
-  // editable command outside Desktop Windows and macOS. Fixed actions bypass
-  // that check, which is the same route DSH's own Enter and Escape rows take.
-  for (const action of FIXED_NAV) {
-    try {
-      ctx.effect(
-        () =>
-          ctx.shortcuts.registerFixed({
-            id: action.id,
-            label: () => t(action.labelKey),
-            keys: [action.code === 'PageUp' ? 'PgUp' : 'PgDn'],
-            bindings: [{ code: action.code, modifiers: [] }],
-            group: 'application'
-          }),
-        `keyboard-shortcut: ${action.id}`
-      )
-    } catch (error) {
-      warn(`fixed action "${action.id}" was not registered`, error)
-    }
-  }
-
+  // Page Up and Page Down carry no modifier and cannot be published as fixed
+  // actions (see NAV_KEYS), so there is nothing to register: the keys are read
+  // straight off the raw input stream. `observeFixedInput` delivers every
+  // keydown regardless of registration, which is what makes this work.
   ctx.effect(
     () =>
       ctx.shortcuts.observeFixedInput((input) => {
@@ -508,6 +506,23 @@ function createService(ctx, prefs, t, notices, warn) {
   return {
     /** Command ids editable from the page. */
     ownedCommandIds: new Set(OWNED_COMMANDS),
+
+    /**
+     * Fixed keys this plugin handles outside the shortcut registry.
+     *
+     * They have no catalog row — the registry cannot hold their codes — so the
+     * page reads them from here. They are shown as reference rows because a
+     * binding that cannot be registered cannot be rebound either.
+     *
+     * @returns One entry per fixed key, localized at read time.
+     */
+    fixedKeys: () =>
+      NAV_KEYS.map((key) => ({
+        id: key.id,
+        label: t(key.labelKey),
+        keys: [key.cap],
+        hint: t('row.fixedHint')
+      })),
 
     getCatalog: () => ctx.shortcuts.catalog.getSnapshot(),
     subscribeCatalog: (listener) => ctx.shortcuts.catalog.subscribe(listener),
