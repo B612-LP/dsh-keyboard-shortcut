@@ -1,0 +1,84 @@
+{
+  "name": "dsh-keyboard-shortcut",
+  "version": "0.1.0",
+  "description": "A Keyboard Shortcuts settings page for DeepSeek Harness (DSH) with permission-mode cycling, reasoning-effort stepping, prompt navigation, and an optional composer key remap.",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./lib/client.js",
+    "./src/*": "./src/*",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib",
+    "src",
+    "docs",
+    "cordis.patch.yml",
+    "CHANGELOG.md",
+    "CONTRIBUTING.md",
+    "README.md",
+    "README.zh-CN.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "cordis",
+    "keyboard",
+    "shortcuts",
+    "hotkeys",
+    "keybindings",
+    "web-ui"
+  ],
+  "homepage": "https://github.com/OZONGO/dsh-keyboard-shortcut#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/OZONGO/dsh-keyboard-shortcut.git"
+  },
+  "bugs": {
+    "url": "https://github.com/OZONGO/dsh-keyboard-shortcut/issues"
+  },
+  "author": "OZONGO",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "watch": "node scripts/build.mjs --watch",
+    "check": "node scripts/build.mjs --check",
+    "prepack": "npm run build",
+    "prepublishOnly": "npm test",
+    "test": "node scripts/build.mjs --check && node --test test/*.test.mjs",
+    "test:unit": "node --test test/*.test.mjs"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "compatibility": {
+      "dshReleases": {
+        "0.2.0-rc.1": "unknown",
+        "0.2.0-rc.2": "compatible"
+      }
+    },
+    "client": {
+      "inject": [],
+      "platform": "web"
+    }
+  },
+  "peerDependencies": {
+    "react": "^18.2.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0",
+    "react": "18.3.1"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
+  }
+}

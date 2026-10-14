@@ -1,0 +1,11 @@
+# lib/ is committed on purpose: DSH loads lib/client.js directly, and several
+# install paths copy the package rather than re-resolving it.
+
+node_modules/
+.ref/
+.tools/
+*.log
+*.tgz
+*.tsbuildinfo
+.DS_Store
+Thumbs.db

@@ -1,0 +1,9 @@
+# dsh-keyboard-shortcut bundle patch.
+#
+# Inserts this package as one Host Loader row. The Host half is an empty
+# `apply` (see src/host/index.js); the row exists so the client module system
+# has an entry to serve this package's browser half (`dsh.client` in
+# package.json) from.
+- insert:
+    - id: keyboard-shortcut
+      name: 'dsh-keyboard-shortcut'
