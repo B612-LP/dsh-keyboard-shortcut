@@ -8,7 +8,7 @@ task-list toggle, and an optional composer key remap.
 
 ## Overview
 
-`dsh-keyboard-shortcut` adds one page to DSH's Settings panel and seven shortcuts
+`dsh-keyboard-shortcut` adds one page to DSH's Settings panel and eight shortcuts
 to the application. The page lists every binding in the running application,
 lets you change the ones this plugin owns, and carries a switch for remapping the
 composer's Enter keys.
@@ -118,7 +118,7 @@ built-in picker runs. It performs no filesystem access and no network requests.
   and macOS, and browsers claim <kbd>Ctrl</kbd>+<kbd>1</kbd>…<kbd>Ctrl</kbd>+<kbd>8</kbd>
   for tab switching. <kbd>Alt</kbd>+<kbd>A</kbd> and <kbd>Ctrl</kbd>+<kbd>L</kbd>
   are not admitted by the browser allowlist at all — a single non-primary
-  modifier is refused, and both keys are spoken for. All four commands exist on
+  modifier is refused, and both keys are spoken for. All five commands exist on
   every platform and can be bound by hand; they simply ship unbound where the
   combination cannot work.
 - **The status-page shortcut reuses an open page.** The sidebar browser
