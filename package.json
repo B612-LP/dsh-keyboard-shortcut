@@ -1,6 +1,6 @@
 {
   "name": "dsh-keyboard-shortcut",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A Keyboard Shortcuts settings page for DeepSeek Harness (DSH) with permission-mode cycling, reasoning-effort stepping, prompt navigation, and an optional composer key remap.",
   "type": "module",
   "main": "lib/index.js",
