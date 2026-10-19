@@ -5,6 +5,22 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-10-19
+
+### Added
+
+- **`Ctrl+3` cycles to the next model** (Desktop). One press moves the
+  session to the next model in the composer picker's display order — the
+  account provider first, then the official one, then every other provider in
+  catalog order — and wraps to the first after the last. The write goes
+  through the same shared `modelDirectories` selection the picker uses, so the
+  seat, the shortcut, and the next request can never disagree. A conversation
+  before its first message cycles from the model the seat already shows, and
+  the current reasoning effort rides along whenever the target model
+  advertises the same level id, falling back to the target model's own
+  default otherwise. A catalog with no second model reports "No other model
+  is available to cycle to." instead of writing a no-op selection.
+
 ## [0.2.1] - 2026-10-19
 
 ### Fixed

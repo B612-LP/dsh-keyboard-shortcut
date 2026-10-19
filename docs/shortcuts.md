@@ -11,12 +11,13 @@ underlying capability is missing.
 | <kbd>Ctrl</kbd>+<kbd>Q</kbd> | `keyboard-shortcut.cycle-permission` | Cycle to the next permission mode | `desktop:windows`, `desktop:macos` |
 | <kbd>Ctrl</kbd>+<kbd>1</kbd> | `keyboard-shortcut.effort-down` | Lower the reasoning effort one level | `desktop:*` |
 | <kbd>Ctrl</kbd>+<kbd>2</kbd> | `keyboard-shortcut.effort-up` | Raise the reasoning effort one level | `desktop:*` |
+| <kbd>Ctrl</kbd>+<kbd>3</kbd> | `keyboard-shortcut.cycle-model` | Cycle to the next model, wrapping at the end | `desktop:*` |
 | <kbd>Alt</kbd>+<kbd>A</kbd> | `keyboard-shortcut.status-page` | Open the DeepSeek status page in the sidebar browser | `desktop:*` |
 | <kbd>Ctrl</kbd>+<kbd>L</kbd> | `keyboard-shortcut.toggle-todos` | Expand or collapse the task list | `desktop:*` |
 | <kbd>PgUp</kbd> | — | Go to the previous input | All |
 | <kbd>PgDn</kbd> | — | Go to the next input | All |
 
-All six commands are rebindable. The two page keys have no command id at all:
+All seven commands are rebindable. The two page keys have no command id at all:
 they are read by the plugin rather than registered, so they appear on the
 settings page as read-only rows. The reason is covered under
 [Why the page keys have no binding](#why-the-page-keys-have-no-binding).
@@ -92,6 +93,27 @@ Moves one level along the model's advertised escalation ladder.
 - A model that advertises no levels reports that instead.
 - An unknown current level is treated as sitting before the first one, so the
   first press establishes a concrete level.
+
+### `keyboard-shortcut.cycle-model` — cycle to the next model
+
+Steps to the next model in the composer picker's display order — the account
+provider first, then the official one, then every other provider in catalog
+order — and wraps to the first after the last.
+
+- **Blocked** with "No session is open." when no session is bound.
+- **Blocked** for an addressed subagent session, whose selection belongs to its
+  parent.
+- Shows a notice naming the new model, joined with the applied effort when one
+  was set explicitly.
+- A conversation before its first message cycles from the model the seat
+  already shows — the catalog default — because the read goes through the same
+  shared directory the picker renders from.
+- The current reasoning effort rides along only when the target model
+  advertises the same level id; otherwise the switch applies the target
+  model's own default, and a target without reasoning control omits the
+  effort entirely.
+- A catalog with no second model shows "No other model is available to cycle
+  to." and changes nothing.
 
 ### `keyboard-shortcut.status-page` — open the DeepSeek status page
 

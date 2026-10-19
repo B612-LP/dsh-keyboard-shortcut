@@ -63,6 +63,7 @@ sections:
 | <kbd>Ctrl</kbd>+<kbd>Q</kbd> | Cycle to the next permission mode | Desktop Windows, macOS |
 | <kbd>Ctrl</kbd>+<kbd>1</kbd> | Lower the reasoning effort one level | Desktop |
 | <kbd>Ctrl</kbd>+<kbd>2</kbd> | Raise the reasoning effort one level | Desktop |
+| <kbd>Ctrl</kbd>+<kbd>3</kbd> | Cycle to the next model, wrapping at the end | Desktop |
 | <kbd>Alt</kbd>+<kbd>A</kbd> | Open the DeepSeek status page in the sidebar browser | Desktop |
 | <kbd>Ctrl</kbd>+<kbd>L</kbd> | Expand or collapse the task list | Desktop |
 | <kbd>PgUp</kbd> | Go to the previous input | All (fixed) |

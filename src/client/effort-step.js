@@ -60,12 +60,15 @@ export function readSelection(ctx, sessionId) {
 /**
  * Resolve the reasoning levels a selection's model advertises.
  *
+ * Shared with `model-cycle`, which needs the same lookup to decide whether the
+ * current effort can ride along to the target model.
+ *
  * @param groups - Model catalog groups from the directory snapshot.
  * @param selection - The current model selection.
  * @returns The ordered levels and the model's default effort, or `undefined`
  * when the model exposes no reasoning control at all.
  */
-function reasoningFor(groups, selection) {
+export function reasoningFor(groups, selection) {
   const model = groups
     .find((group) => group.id === selection.provider)
     ?.models.find((candidate) => candidate.id === selection.model)

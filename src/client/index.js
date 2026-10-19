@@ -19,6 +19,7 @@
  * | Open-settings command | `ctx.shortcuts.register` |
  * | Permission-cycle command | `ctx.shortcuts.register` |
  * | Reasoning-effort commands | `ctx.shortcuts.register` |
+ * | Model-cycle command | `ctx.shortcuts.register`, see `model-cycle.js` |
  * | Status-page command | `ctx.shortcuts.register`, see `status-page.js` |
  * | Task-list command | `ctx.shortcuts.register`, see `todo-toggle.js` |
  * | Previous/next input | `observeFixedInput` only — see `NAV_KEYS` |
@@ -53,6 +54,7 @@ import { createNotices, createNoticeOverlay } from './notices.js'
 import { installComposerKeys } from './composer-keys.js'
 import { createPermissionCatalog, cyclePermissionMode, permissionLabel } from './permission-cycle.js'
 import { stepEffort } from './effort-step.js'
+import { cycleModel } from './model-cycle.js'
 import { navigateInput } from './prompt-nav.js'
 import { openStatusPage } from './status-page.js'
 import { toggleTodoList } from './todo-toggle.js'
@@ -72,6 +74,7 @@ const OWNED_COMMANDS = [
   'keyboard-shortcut.cycle-permission',
   'keyboard-shortcut.effort-up',
   'keyboard-shortcut.effort-down',
+  'keyboard-shortcut.cycle-model',
   'keyboard-shortcut.status-page',
   'keyboard-shortcut.toggle-todos'
 ]
@@ -112,6 +115,20 @@ const EFFORT_UP_DEFAULTS = {
   'desktop:windows': { code: 'Digit2', modifiers: ['control'] },
   'desktop:macos': { code: 'Digit2', modifiers: ['control'] },
   'desktop:linux': { code: 'Digit2', modifiers: ['control'] }
+}
+
+/**
+ * Ctrl+3 cycles the model.
+ *
+ * Desktop only, for the same reasons as the effort digits: a one-modifier
+ * digit chord is not in the Web allowlist and browsers claim the low digits
+ * for tab switching. The command keeps the digit row together — one press
+ * steps to the next model in the picker's display order and wraps at the end.
+ */
+const MODEL_CYCLE_DEFAULTS = {
+  'desktop:windows': { code: 'Digit3', modifiers: ['control'] },
+  'desktop:macos': { code: 'Digit3', modifiers: ['control'] },
+  'desktop:linux': { code: 'Digit3', modifiers: ['control'] }
 }
 
 /**
@@ -287,6 +304,10 @@ export function apply(ctx) {
       notices.show(t('toast.effortAtBottom'))
       return
     }
+    if (fallbackKey !== undefined && error?.code === 'model-none') {
+      notices.show(t('toast.modelNone'))
+      return
+    }
     console.error('[dsh-keyboard-shortcut]', error)
     if (fallbackKey !== undefined) notices.show(t(fallbackKey))
   }
@@ -419,6 +440,43 @@ export function apply(ctx) {
   register(
     effortCommand('keyboard-shortcut.effort-up', 1, EFFORT_UP_DEFAULTS, 'command.effortUp', 'toast.effortUp')
   )
+
+  register({
+    id: 'keyboard-shortcut.cycle-model',
+    label: () => t('command.cycleModel'),
+    aliases: ['switch model', 'cycle model', 'next model'],
+    defaults: MODEL_CYCLE_DEFAULTS,
+    regions: ['page', 'editable'],
+    modals: [],
+    resolve: () => {
+      const sessionId = currentSessionId()
+      const sessions = ctx.get('sessions')
+      if (sessionId === undefined || sessions?.binding?.(sessionId) === undefined) {
+        return { status: 'blocked', reason: t('toast.noSession') }
+      }
+      // Addressed subagent sessions cannot change their own model; their
+      // selection belongs to the parent.
+      if (sessions.subagentAddress?.(sessionId) !== undefined) {
+        return { status: 'blocked', reason: t('toast.modelUnavailable') }
+      }
+      if (ctx.get('modelDirectories') === undefined) {
+        return { status: 'blocked', reason: t('toast.modelUnavailable') }
+      }
+      return {
+        status: 'handled',
+        run: () => {
+          void cycleModel(ctx, sessionId).then(
+            (name) => {
+              notices.show(t('toast.model', { name }))
+            },
+            (error) => {
+              report(error, 'toast.modelUnavailable')
+            }
+          )
+        }
+      }
+    }
+  })
 
   register({
     id: 'keyboard-shortcut.status-page',
