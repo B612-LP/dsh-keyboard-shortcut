@@ -118,16 +118,22 @@ const EFFORT_UP_DEFAULTS = {
 }
 
 /**
- * Ctrl+3 cycles the model.
+ * Cmd+3 on macOS, Ctrl+3 elsewhere, cycles the model.
  *
  * Desktop only, for the same reasons as the effort digits: a one-modifier
  * digit chord is not in the Web allowlist and browsers claim the low digits
  * for tab switching. The command keeps the digit row together — one press
  * steps to the next model in the picker's display order and wraps at the end.
+ *
+ * macOS declares `primary` rather than a literal `control`: the desktop
+ * reservation check short-circuits there, and <kbd>Cmd</kbd>+<kbd>3</kbd> is
+ * what a Mac keyboard expects for a command chord. Windows and Linux write
+ * `control` literally, which is what `primary` resolves to on them anyway,
+ * kept explicit to match the rest of this plugin.
  */
 const MODEL_CYCLE_DEFAULTS = {
   'desktop:windows': { code: 'Digit3', modifiers: ['control'] },
-  'desktop:macos': { code: 'Digit3', modifiers: ['control'] },
+  'desktop:macos': { code: 'Digit3', modifiers: ['primary'] },
   'desktop:linux': { code: 'Digit3', modifiers: ['control'] }
 }
 

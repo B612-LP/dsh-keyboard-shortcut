@@ -11,7 +11,7 @@ underlying capability is missing.
 | <kbd>Ctrl</kbd>+<kbd>Q</kbd> | `keyboard-shortcut.cycle-permission` | Cycle to the next permission mode | `desktop:windows`, `desktop:macos` |
 | <kbd>Ctrl</kbd>+<kbd>1</kbd> | `keyboard-shortcut.effort-down` | Lower the reasoning effort one level | `desktop:*` |
 | <kbd>Ctrl</kbd>+<kbd>2</kbd> | `keyboard-shortcut.effort-up` | Raise the reasoning effort one level | `desktop:*` |
-| <kbd>Ctrl</kbd>+<kbd>3</kbd> | `keyboard-shortcut.cycle-model` | Cycle to the next model, wrapping at the end | `desktop:*` |
+| <kbd>Cmd</kbd>+<kbd>3</kbd> (macOS) / <kbd>Ctrl</kbd>+<kbd>3</kbd> | `keyboard-shortcut.cycle-model` | Cycle to the next model, wrapping at the end | `desktop:*` |
 | <kbd>Alt</kbd>+<kbd>A</kbd> | `keyboard-shortcut.status-page` | Open the DeepSeek status page in the sidebar browser | `desktop:*` |
 | <kbd>Ctrl</kbd>+<kbd>L</kbd> | `keyboard-shortcut.toggle-todos` | Expand or collapse the task list | `desktop:*` |
 | <kbd>PgUp</kbd> | — | Go to the previous input | All |

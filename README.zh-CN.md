@@ -47,7 +47,7 @@ dsh plugin --profile <profile> add dsh-keyboard-shortcut
 | <kbd>Ctrl</kbd>+<kbd>Q</kbd> | 切换到下一个权限模式 | 桌面版 Windows、macOS |
 | <kbd>Ctrl</kbd>+<kbd>1</kbd> | 降低一档思考强度 | 桌面版 |
 | <kbd>Ctrl</kbd>+<kbd>2</kbd> | 提高一档思考强度 | 桌面版 |
-| <kbd>Ctrl</kbd>+<kbd>3</kbd> | 切换到下一个模型（到末尾后回到第一个） | 桌面版 |
+| <kbd>Cmd</kbd>+<kbd>3</kbd>（macOS）/ <kbd>Ctrl</kbd>+<kbd>3</kbd> | 切换到下一个模型（到末尾后回到第一个） | 桌面版 |
 | <kbd>Alt</kbd>+<kbd>A</kbd> | 在侧边栏浏览器中打开 DeepSeek 服务状态页 | 桌面版 |
 | <kbd>Ctrl</kbd>+<kbd>L</kbd> | 展开或收起任务清单 | 桌面版 |
 | <kbd>PgUp</kbd> | 跳到上一条输入 | 全部（直接读取） |

@@ -5,6 +5,16 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.1] - 2026-10-19
+
+### Changed
+
+- **The model-cycle default on macOS is now <kbd>Cmd</kbd>+<kbd>3</kbd>**
+  (was <kbd>Ctrl</kbd>+<kbd>3</kbd>). The declaration uses the `primary`
+  modifier there, which the desktop reservation check admits; Windows and
+  Linux keep <kbd>Ctrl</kbd>+<kbd>3</kbd>. An explicitly saved binding
+  continues to win over the default.
+
 ## [0.3.0] - 2026-10-19
 
 ### Added
