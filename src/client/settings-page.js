@@ -66,7 +66,9 @@ const CSS = {
   switchRow: 'dshKbd_switchRow',
   switchTrack: 'dshKbd_switchTrack',
   switchKnob: 'dshKbd_switchKnob',
-  switchOn: 'dshKbd_switchOn'
+  switchOn: 'dshKbd_switchOn',
+  input: 'dshKbd_input',
+  inputHint: 'dshKbd_inputHint'
 }
 
 const STYLESHEET = `
@@ -95,6 +97,10 @@ const STYLESHEET = `
 .${CSS.switchOn}{background:var(--dsw-alias-brand-primary)}
 .${CSS.switchKnob}{position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .12s}
 .${CSS.switchOn} .${CSS.switchKnob}{transform:translateX(16px)}
+.${CSS.input}{box-sizing:border-box;flex:none;width:220px;height:30px;border-radius:var(--dsw-radius-md);background:var(--dsw-alias-bg-module-platform);color:var(--dsw-alias-label-primary);border:.5px solid var(--dsw-alias-border-l2);padding:0 10px;font:inherit;font-size:13px;line-height:20px}
+.${CSS.input}:focus{outline:none;border-color:var(--dsw-focus-ring-color,var(--dsw-alias-state-business-primary))}
+.${CSS.input}::placeholder{color:var(--dsw-alias-label-dimmed,var(--dsw-alias-label-tertiary))}
+.${CSS.inputHint}{color:var(--dsw-alias-label-tertiary);font-size:12px;line-height:18px;margin:2px 0 0}
 `
 
 /**
@@ -182,6 +188,50 @@ function PreferenceRow(props) {
         onChange(value !== true)
       }
     }, h('span', { className: CSS.switchKnob }))
+  )
+}
+
+/**
+ * A labelled free-text preference.
+*
+ * Writes persist per keystroke: the store publishes synchronously and the
+ * cycle reads the value at keypress time, so there is no separate save step
+ * to forget.
+*
+ * @param props - Label, description, hint, placeholder, value, change handler.
+ * @returns The text row.
+*/
+function TextPreferenceRow(props) {
+  const { label, description, hint, placeholder, value, onChange } = props
+  return h(
+    'div',
+    { className: CSS.switchRow },
+    h(
+      'div',
+      { className: CSS.rowText },
+      h('div', { className: CSS.rowTitle }, label),
+      h('p', { className: CSS.rowHint }, description)
+    ),
+    h(
+      'div',
+      { className: CSS.control },
+      h('div', { style: { display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' } },
+        h('input', {
+          type: 'text',
+          className: CSS.input,
+          value: typeof value === 'string' ? value : '',
+          placeholder,
+          'aria-label': label,
+          spellCheck: false,
+          autoCapitalize: 'off',
+          autoCorrect: 'off',
+          onChange: (event) => {
+            onChange(event.target.value)
+          }
+        }),
+        hint === undefined ? null : h('p', { className: CSS.inputHint }, hint)
+      )
+    )
   )
 }
 
@@ -439,6 +489,23 @@ export function createSettingsPage(service) {
           value: prefs.optimizeComposerKeys === true,
           onChange: (next) => {
             service.setPref('optimizeComposerKeys', next)
+          }
+        })
+      ),
+
+      h(
+        'section',
+        { className: CSS.section },
+        h('h3', { className: CSS.sectionTitle }, t('section.cycle.title')),
+        h('p', { className: CSS.sectionText }, t('section.cycle.description')),
+        h(TextPreferenceRow, {
+          label: t('input.cycle.label'),
+          description: t('input.cycle.description'),
+          hint: t('input.cycle.hint'),
+          placeholder: t('input.cycle.placeholder'),
+          value: typeof prefs.cycleModels === 'string' ? prefs.cycleModels : '',
+          onChange: (next) => {
+            service.setPref('cycleModels', next)
           }
         })
       ),

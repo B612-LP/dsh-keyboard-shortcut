@@ -175,3 +175,60 @@ describe('cycleModel', () => {
     await assert.rejects(() => cycleModel(ctx, 's1'), /session\/model-unavailable: nope/u)
   })
 })
+
+describe('cycleModel with a scope', () => {
+  // The user-facing case: flash models across two providers, with a pro model
+  // in the catalog that the cycle must skip.
+  const catalog = [
+    { id: 'deepseek-account', models: [model('deepseek-flash', { efforts: ['low', 'high'], defaultEffort: 'low' }), model('deepseek-pro', { efforts: ['low', 'high'], defaultEffort: 'low' })] },
+    { id: 'zai-coding-cn', models: [model('glm-5.3-flash', { efforts: ['low', 'high'], defaultEffort: 'low' })] }
+  ]
+
+  it('cycles only the models matching the scope, in display order', async () => {
+    const { ctx, calls } = contextFor({
+      groups: catalog,
+      projected: { next: { provider: 'deepseek-account', model: 'deepseek-flash', reasoningEffort: 'low' } }
+    })
+    assert.equal(await cycleModel(ctx, 's1', 'flash'), 'GLM-5.3-FLASH · LOW')
+    assert.deepEqual(calls, [{ provider: 'zai-coding-cn', model: 'glm-5.3-flash', reasoningEffort: 'low' }])
+  })
+
+  it('wraps within the scope', async () => {
+    const { ctx, calls } = contextFor({
+      groups: catalog,
+      projected: { next: { provider: 'zai-coding-cn', model: 'glm-5.3-flash', reasoningEffort: 'high' } }
+    })
+    assert.equal(await cycleModel(ctx, 's1', 'flash'), 'DEEPSEEK-FLASH · HIGH')
+    assert.deepEqual(calls, [{ provider: 'deepseek-account', model: 'deepseek-flash', reasoningEffort: 'high' }])
+  })
+
+  it('matches case-insensitively around trimmed comma entries', async () => {
+    const { ctx, calls } = contextFor({
+      groups: catalog,
+      projected: { next: { provider: 'deepseek-account', model: 'deepseek-pro', reasoningEffort: 'low' } }
+    })
+    assert.equal(await cycleModel(ctx, 's1', '  FLASH , zai '), 'DEEPSEEK-FLASH · LOW')
+    assert.deepEqual(calls, [{ provider: 'deepseek-account', model: 'deepseek-flash', reasoningEffort: 'low' }])
+  })
+
+  it('reports an empty scope match without writing', async () => {
+    const { ctx, calls } = contextFor({
+      groups: catalog,
+      projected: { next: { provider: 'deepseek-account', model: 'deepseek-flash' } }
+    })
+    await assert.rejects(() => cycleModel(ctx, 's1', 'pro-nothing'), (error) => {
+      assert.equal(error.code, 'scope-empty')
+      return true
+    })
+    assert.deepEqual(calls, [])
+  })
+
+  it('treats a blank scope as unrestricted', async () => {
+    const { ctx, calls } = contextFor({
+      groups: [{ id: 'p', models: [model('a'), model('b')] }],
+      projected: { next: { provider: 'p', model: 'a' } }
+    })
+    assert.equal(await cycleModel(ctx, 's1', '  ,  '), 'B')
+    assert.deepEqual(calls, [{ provider: 'p', model: 'b' }])
+  })
+})

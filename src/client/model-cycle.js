@@ -61,26 +61,65 @@ function orderedModels(groups) {
 }
 
 /**
+ * Parse a scope preference into match terms.
+ *
+ * Entries are comma-separated; surrounding whitespace is ignored and empty
+ * entries are dropped. Comparison is case-insensitive.
+ *
+ * @param scope - The raw preference text, or `undefined`/`null`.
+ * @returns The lowercase non-empty terms, or `[]` for an unrestricted cycle.
+ */
+export function scopeTerms(scope) {
+  if (typeof scope !== 'string') return []
+  return scope
+    .split(',')
+    .map((term) => term.trim().toLowerCase())
+    .filter((term) => term.length > 0)
+}
+
+/**
+ * Whether one ordered-model entry matches any scope term.
+ *
+ * A term matches when it is a substring of the model id, the display name, or
+ * the provider id — so `flash` admits every flash model across providers,
+ * while `glm` narrows to one provider's models.
+ *
+ * @param entry - An ordered-model entry.
+ * @param terms - Lowercase terms from {@link scopeTerms}.
+ * @returns Whether the entry belongs in the cycle.
+ */
+export function matchesScope(entry, terms) {
+  if (terms.length === 0) return true
+  const haystack = `${entry.provider} ${entry.model.id} ${entry.model.name ?? ''}`.toLowerCase()
+  return terms.some((term) => haystack.includes(term))
+}
+
+/**
  * Move a session to the next model in display order, wrapping to the first.
  *
  * @param ctx - The client plugin context. Must carry `sessions` and
  * `modelDirectories`.
  * @param sessionId - The session to change.
+ * @param scope - Optional restriction: cycle only models whose id, name, or
+ * provider contains one of these comma-separated texts. Empty or `undefined`
+ * cycles every model in the catalog.
  * @returns The applied selection's display label: the model name, joined with
  * the applied effort's name when one was set explicitly.
- * @throws When the catalog lists no models, or the Host rejects the change.
+ * @throws When the catalog lists no models, nothing matches the scope, or the
+ * Host rejects the change.
  */
-export async function cycleModel(ctx, sessionId) {
+export async function cycleModel(ctx, sessionId, scope) {
   const directories = ctx.get('modelDirectories')
   if (directories === undefined) throw new Error('the model directory is not available in this deployment')
   const directory = directories.directoryFor(sessionId)
   await directory.load()
   const state = directory.store.getSnapshot()
 
-  const models = orderedModels(state.groups ?? [])
+  const all = orderedModels(state.groups ?? [])
+  const models = all.filter((entry) => matchesScope(entry, scopeTerms(scope)))
   if (models.length === 0) {
-    const error = new Error('the catalog lists no models')
-    error.code = 'model-none'
+    const error = new Error(all.length === 0 ? 'the catalog lists no models' : 'no model matches the cycle scope')
+    error.code = all.length === 0 ? 'model-none' : 'scope-empty'
     throw error
   }
   if (models.length === 1) {

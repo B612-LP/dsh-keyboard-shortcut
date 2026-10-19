@@ -35,14 +35,20 @@ export const STORAGE_KEY = 'dsh.keyboard-shortcut.v1'
 /**
  * Preference shape and defaults.
  *
- * Every entry is a plain boolean. Adding a field is a minor version change;
- * changing a field's meaning requires a new {@link STORAGE_KEY}.
+ * Entries are plain booleans or strings. Adding a field is a minor version
+ * change; changing a field's meaning requires a new {@link STORAGE_KEY}.
  */
 export const DEFAULTS = Object.freeze({
   /** Rotate the composer's Enter gestures. See `composer-keys.js`. */
   optimizeComposerKeys: false,
   /** Give Ctrl+/ to this plugin's Settings page. See `open-settings.js`. */
-  takeOverShortcutKey: true
+  takeOverShortcutKey: true,
+  /**
+   * Restrict the model cycle to models whose id, name, or provider contains
+   * one of these comma-separated texts. Empty cycles every model. See
+   * `model-cycle.js`.
+   */
+  cycleModels: ''
 })
 
 /**
@@ -56,7 +62,7 @@ export const DEFAULTS = Object.freeze({
  * @property {() => object} getSnapshot - Current values. Identity is stable
  * until a change, as `useSyncExternalStore` requires.
  * @property {(listener: () => void) => () => void} subscribe - Observe changes.
- * @property {(key: string, value: boolean) => void} set - Write one switch.
+ * @property {(key: string, value: boolean | string) => void} set - Write one preference.
  * @property {(event: StorageEvent) => void} adopt - Fold another tab's write.
  */
 
@@ -87,7 +93,7 @@ export function readPrefs(storage) {
     }
     const resolved = { ...DEFAULTS }
     for (const key of Object.keys(DEFAULTS)) {
-      if (typeof parsed[key] === 'boolean') resolved[key] = parsed[key]
+      if (typeof parsed[key] === typeof DEFAULTS[key]) resolved[key] = parsed[key]
     }
     return resolved
   } catch {

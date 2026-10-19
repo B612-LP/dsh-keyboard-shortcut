@@ -56,6 +56,14 @@ export const en = {
   'group.input': 'Message input',
   'group.menus': 'Menus and dialogs',
 
+  // Model cycling.
+  'section.cycle.title': 'Model cycling',
+  'section.cycle.description':
+    'Restrict the model shortcut to a subset of the catalog. Matching is a case-insensitive substring of the model id, its display name, or the provider id.',
+  'input.cycle.label': 'Cycle scope',
+  'input.cycle.placeholder': 'e.g. flash, glm',
+  'input.cycle.hint': 'Empty cycles every model.',
+
   // Input optimisation.
   'input.optimize.label': 'Use the optimised composer keys',
   'input.optimize.description':
@@ -91,6 +99,7 @@ export const en = {
   'toast.model': 'Switched to {name}',
   'toast.modelNone': 'No other model is available to cycle to.',
   'toast.modelUnavailable': 'The model directory is not available in this deployment.',
+  'toast.modelScopeEmpty': 'No model matches the cycle scope.',
   'toast.navUnavailable': 'No turn navigator is available for this session.',
   'toast.navAtEdge': 'No {direction} input to move to.',
   'toast.previous': 'previous',
@@ -133,6 +142,13 @@ export const zh = {
   'group.input': '消息输入',
   'group.menus': '菜单与对话框',
 
+  'section.cycle.title': '模型循环',
+  'section.cycle.description':
+    '把模型快捷键限制在目录的一部分里。匹配方式：对模型 id、显示名称或服务商 id 做不区分大小写的子串匹配。',
+  'input.cycle.label': '循环范围',
+  'input.cycle.placeholder': '例如：flash, glm',
+  'input.cycle.hint': '留空表示在全部模型间循环。',
+
   'input.optimize.label': '启用输入优化',
   'input.optimize.description':
     'Ctrl+Enter 发送消息，Enter 换行，Shift+Enter 使用互补的 Queue／Steer 方式。',
@@ -163,6 +179,7 @@ export const zh = {
   'toast.model': '已切换到 {name}',
   'toast.modelNone': '没有其他可用模型可以切换。',
   'toast.modelUnavailable': '当前部署没有可用的模型目录。',
+  'toast.modelScopeEmpty': '没有模型匹配当前切换范围。',
   'toast.navUnavailable': '当前会话没有可用的轮次导航。',
   'toast.navAtEdge': '没有{direction}一条输入了。',
   'toast.previous': '上',

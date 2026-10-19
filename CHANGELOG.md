@@ -5,6 +5,20 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-10-19
+
+### Added
+
+- **A configurable cycle scope for the model shortcut.** The new Keyboard
+  Shortcuts page section "Model cycling" takes a comma-separated text: the
+  `Cmd`/`Ctrl`+`3` cycle then only walks models whose id, display name, or
+  provider contains one of those texts (case-insensitive substrings). A
+  conversation between flash models is `flash`; a single provider is its id.
+  Leaving the field empty cycles every model, as before. The current
+  selection sitting outside the scope starts the cycle at the first scoped
+  model; a scope matching nothing reports "No model matches the cycle
+  scope." and changes nothing.
+
 ## [0.3.1] - 2026-10-19
 
 ### Changed

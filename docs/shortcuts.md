@@ -114,6 +114,12 @@ order — and wraps to the first after the last.
   effort entirely.
 - A catalog with no second model shows "No other model is available to cycle
   to." and changes nothing.
+- **The cycle scope is configurable** on the settings page ("Model cycling"):
+  a comma-separated text restricts the walk to models whose id, display name,
+  or provider contains one of those texts, case-insensitively. Empty cycles
+  every model. A scope matching nothing reports "No model matches the cycle
+  scope." and changes nothing; a current selection outside the scope starts
+  the cycle at the first scoped model.
 
 ### `keyboard-shortcut.status-page` — open the DeepSeek status page
 

@@ -314,6 +314,10 @@ export function apply(ctx) {
       notices.show(t('toast.modelNone'))
       return
     }
+    if (fallbackKey !== undefined && error?.code === 'scope-empty') {
+      notices.show(t('toast.modelScopeEmpty'))
+      return
+    }
     console.error('[dsh-keyboard-shortcut]', error)
     if (fallbackKey !== undefined) notices.show(t(fallbackKey))
   }
@@ -471,7 +475,10 @@ export function apply(ctx) {
       return {
         status: 'handled',
         run: () => {
-          void cycleModel(ctx, sessionId).then(
+          // Read the scope at keypress time so a settings-page edit applies to
+          // the very next press without remounting anything.
+          const scope = typeof prefs.getSnapshot().cycleModels === 'string' ? prefs.getSnapshot().cycleModels : ''
+          void cycleModel(ctx, sessionId, scope).then(
             (name) => {
               notices.show(t('toast.model', { name }))
             },
