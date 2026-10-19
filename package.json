@@ -1,6 +1,6 @@
 {
   "name": "dsh-keyboard-shortcut",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "A Keyboard Shortcuts settings page for DeepSeek Harness (DSH) with permission-mode cycling, reasoning-effort stepping, prompt navigation, and an optional composer key remap.",
   "type": "module",
   "main": "lib/index.js",
@@ -33,13 +33,13 @@
     "keybindings",
     "web-ui"
   ],
-  "homepage": "https://github.com/OZONGO/dsh-keyboard-shortcut#readme",
+  "homepage": "https://github.com/B612-LP/dsh-keyboard-shortcut#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/OZONGO/dsh-keyboard-shortcut.git"
+    "url": "git+https://github.com/B612-LP/dsh-keyboard-shortcut.git"
   },
   "bugs": {
-    "url": "https://github.com/OZONGO/dsh-keyboard-shortcut/issues"
+    "url": "https://github.com/B612-LP/dsh-keyboard-shortcut/issues"
   },
   "author": "OZONGO",
   "license": "MIT",

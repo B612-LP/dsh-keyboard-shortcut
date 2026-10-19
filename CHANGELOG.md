@@ -5,6 +5,26 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.1] - 2026-10-19
+
+### Fixed
+
+- **Reasoning-effort shortcuts work on a conversation before its first
+  message.** `Ctrl+1`/`Ctrl+2` read the session's `modelSelection` projection
+  directly, and a brand-new session has never seen that key — the projection
+  store reads `undefined` until a value is pushed — so every step reported
+  "no model selection" (shown as "this model has no reasoning effort levels")
+  on a fresh conversation while the composer's own picker displayed a model
+  and level just fine. `stepEffort` now resolves the selection through the
+  same shared `modelDirectories` surface the picker renders: the projection's
+  `next` when present, otherwise the directory's effective `current`, which
+  for a blank session is the catalog default. A Host accepts
+  `selectModel` on a blank session (it installs the selection for the next
+  request), so the stepped level applies to the first message. Clamping and
+  the projection-wins-over-default ordering are unchanged. A carried test
+  pins the blank-session path; the old "no selection anywhere" refusal keeps
+  its test with a directory-shaped mock.
+
 ## [0.2.0] - 2026-10-16
 
 ### Added

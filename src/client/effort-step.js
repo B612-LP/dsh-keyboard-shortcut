@@ -23,6 +23,12 @@
  * the Remote directly means the shortcut and the on-screen picker can never
  * disagree.
  *
+ * Before a session's first message the projection carries no frame at all,
+ * while the composer already seats a model: the directory resolves that
+ * selection as the projection's `next` or, failing that, the catalog default.
+ * Reading through the directory as well means a fresh conversation steps from
+ * the level the picker actually displays instead of reporting "no selection".
+ *
  * ## Clamping
  *
  * Steps clamp at both ends. Wrapping would be actively misleading at the top:
@@ -80,14 +86,19 @@ function reasoningFor(groups, selection) {
  * the Host rejects the change.
  */
 export async function stepEffort(ctx, sessionId, delta) {
-  const selection = readSelection(ctx, sessionId)
-  if (selection === undefined) throw new Error('this session has no model selection yet')
-
   const directories = ctx.get('modelDirectories')
   if (directories === undefined) throw new Error('the model directory is not available in this deployment')
   const directory = directories.directoryFor(sessionId)
   await directory.load()
   const state = directory.store.getSnapshot()
+
+  // A session that has not seen its first message carries no `modelSelection`
+  // projection frame, yet the composer already seats a model: the directory
+  // resolves the effective selection as the projection's `next` or, failing
+  // that, the catalog default. Read through that same surface so a fresh
+  // conversation steps from the level the picker actually displays.
+  const selection = readSelection(ctx, sessionId) ?? state.current ?? undefined
+  if (selection === undefined) throw new Error('this session has no model selection yet')
 
   const reasoning = reasoningFor(state.groups ?? [], selection)
   if (reasoning === undefined) throw new Error('this model advertises no reasoning effort levels')

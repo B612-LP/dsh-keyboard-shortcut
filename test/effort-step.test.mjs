@@ -149,12 +149,74 @@ describe('stepEffort', () => {
     assert.deepEqual(calls, [])
   })
 
-  it('refuses a level on a session with no model selection', async () => {
+  it('refuses a level when neither the projection nor the directory has a selection', async () => {
     const ctx = clientContext({
       sessions: { binding: () => ({ session: { projections: { faceOf: () => ({ getSnapshot: () => undefined }) } } }) },
-      modelDirectories: { directoryFor: () => ({}) }
+      modelDirectories: {
+        directoryFor: () => ({
+          load: async () => {},
+          store: { getSnapshot: () => ({ current: null, groups: [] }) }
+        })
+      }
     })
     await assert.rejects(() => stepEffort(ctx, 's1', 1), /no model selection/u)
+  })
+
+  it('steps from the directory default on a session before its first message', async () => {
+    // A blank session carries no `modelSelection` projection frame, yet the
+    // composer already seats the catalog default. The step must read through
+    // the same surface the picker renders, or the shortcut stays dead on every
+    // fresh conversation.
+    const calls = []
+    const ctx = clientContext({
+      sessions: { binding: () => ({ session: { projections: { faceOf: () => ({ getSnapshot: () => undefined }) } } }) },
+      modelDirectories: {
+        directoryFor: () => ({
+          load: async () => {},
+          store: {
+            getSnapshot: () => ({
+              current: { provider: 'p', model: 'm' },
+              groups: [{ id: 'p', models: [{ id: 'm', reasoning: { defaultEffort: 'low', efforts: [{ id: 'low', name: 'L' }, { id: 'high', name: 'H' }] } }] }]
+            })
+          },
+          select: async (next) => {
+            calls.push(next)
+            return { ok: true, value: undefined }
+          }
+        })
+      }
+    })
+    assert.equal(await stepEffort(ctx, 's1', 1), 'H')
+    assert.deepEqual(calls, [{ provider: 'p', model: 'm', reasoningEffort: 'high' }])
+  })
+
+  it('prefers a projection intent over the directory default on a blank session', async () => {
+    // A rapid first keypress installs a projection `next` before the second
+    // one runs; the step must climb from that intent, not from the default.
+    const calls = []
+    const ctx = clientContext({
+      sessions: { binding: () => ({ session: { projections: { faceOf: () => ({ getSnapshot: () => ({ next: { provider: 'p', model: 'm', reasoningEffort: 'high' } }) }) } } }) },
+      modelDirectories: {
+        directoryFor: () => ({
+          load: async () => {},
+          store: {
+            getSnapshot: () => ({
+              current: { provider: 'p', model: 'm' },
+              groups: [{ id: 'p', models: [{ id: 'm', reasoning: { defaultEffort: 'low', efforts: [{ id: 'low', name: 'L' }, { id: 'high', name: 'H' }] } }] }]
+            })
+          },
+          select: async (next) => {
+            calls.push(next)
+            return { ok: true, value: undefined }
+          }
+        })
+      }
+    })
+    await assert.rejects(() => stepEffort(ctx, 's1', 1), (error) => {
+      assert.equal(error.code, 'effort-at-top')
+      return true
+    })
+    assert.deepEqual(calls, [], 'a clamped step must not write')
   })
 
   it('surfaces a rejected selection', async () => {
